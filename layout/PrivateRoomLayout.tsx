@@ -8,7 +8,12 @@ import { FaPaperPlane } from "react-icons/fa";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { Socket } from "socket.io-client";
 import { getSocket } from "../app/socket";
-import { setLoading } from "../redux/actions/allActions";
+import {
+  setGameMessage,
+  setGamePlayers,
+  setLoading,
+} from "../redux/actions/allActions";
+import { stat } from "fs";
 
 interface Message {
   text: string;
@@ -21,8 +26,11 @@ export default function PrivateRoomLayout({
   children: React.ReactNode;
 }>) {
   const [isConnected, setIsConnected] = useState(false);
-  const [players, setPlayers] = useState<string[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
+  // const [players, setPlayers] = useState<string[]>([]);
+  // const [messages, setMessages] = useState<Message[]>([]);
+
+  const messages = useAppSelector((state) => state.game?.messages);
+  const players = useAppSelector((state) => state.game?.players);
 
   const router = useRouter();
   const rounds = useAppSelector((state) => state.gameSetting.rounds);
@@ -30,6 +38,7 @@ export default function PrivateRoomLayout({
 
   const playerName = useMemo(() => sessionStorage.getItem("playerName"), []);
   const { roomid } = useParams();
+
   const searchParams = useSearchParams();
   const inviteRoomid = searchParams.get("");
 
@@ -47,12 +56,16 @@ export default function PrivateRoomLayout({
     playerList: string[];
     messages: Message[];
   }) => {
-    setPlayers(playerList);
-    setMessages((prev) => [...prev, ...messages]);
+    // setPlayers(playerList);
+    dispatch(setGamePlayers(playerList));
+    dispatch(setGameMessage(messages));
+
+    // setMessages((prev) => [...prev, ...messages]);
   };
 
   const onMessageBroadcast = (newMessages: Message[]) => {
-    setMessages(newMessages);
+    // setMessages(newMessages);
+    dispatch(setGameMessage(newMessages));
   };
 
   const onPlayerDisconnect = ({
@@ -62,8 +75,8 @@ export default function PrivateRoomLayout({
     playerList: string[];
     messages: Message[];
   }) => {
-    setPlayers(playerList);
-    setMessages(messages);
+    dispatch(setGamePlayers(playerList));
+    dispatch(setGameMessage(messages));
   };
 
   useEffect(() => {
@@ -91,6 +104,7 @@ export default function PrivateRoomLayout({
       socket.on("playerList:update", onPlayerListUpdate);
       socket.on("playerMessage:broadcast", onMessageBroadcast);
       socket.on("player:disconnect", onPlayerDisconnect);
+      socket.on("copy:clipboard", onMessageBroadcast);
 
       return () => {
         socket.off("connect", onConnect);

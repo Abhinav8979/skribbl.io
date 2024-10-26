@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { setGameSetting } from "../../../redux/actions/allActions";
 import { getSocket } from "../../socket";
 import { useParams } from "next/navigation";
+import { Socket } from "socket.io-client";
 
 export default function Page() {
   type SettingOption = number | string;
@@ -95,7 +96,7 @@ export default function Page() {
   };
 
   const [invite, setInvite] = useState<boolean>(false);
-  const socket = getSocket;
+  const socket: Socket = getSocket();
 
   const handleCopyUrl = () => {
     const pageUrl = window.location.origin + "/?" + roomid;
@@ -104,12 +105,15 @@ export default function Page() {
     });
   };
 
-  //   const CopyToClipboard = () => {
-  //     const pageUrl = window.location.origin + "/?" + roomid;
-  //     navigator.clipboard.writeText(pageUrl).then(() => {
-  //       socket.emit();
-  //     });
-  //   };
+  const CopyToClipboard = () => {
+    const pageUrl = window.location.origin + "/?" + roomid;
+    navigator.clipboard.writeText(pageUrl).then(() => {
+      socket.emit("copy:clipboard", {
+        message: "Copied room link to clipboard!",
+        roomid,
+      });
+    });
+  };
 
   return (
     <>
@@ -164,7 +168,7 @@ export default function Page() {
           </button>
           <button
             // onClick={() => setInvite(true)}.
-            onClick={handleCopyUrl}
+            onClick={CopyToClipboard}
             className="bg-blue-600 hover:bg-blue-700 rounded-custom w-1/4 flex gap-2 items-center justify-center"
           >
             <FaUserPlus />

@@ -1,14 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import gameSettingReducer from "./features/game/gameSetting";
-import socketReducer from "./features/socket/socketSlice";
 import otherSlice from "./features/other/otherSlice";
+import gameReducer from "./features/game/game";
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
       gameSetting: gameSettingReducer,
-      socket: socketReducer,
       other: otherSlice,
+      game: gameReducer,
     },
   });
 };

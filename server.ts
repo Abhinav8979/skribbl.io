@@ -60,6 +60,13 @@ app.prepare().then(() => {
       }
     });
 
+    socket.on("copy:clipboard", ({ message, roomid }) => {
+      if (message && roomid) {
+        roomMessages[roomid].push({ text: message, color: "#FFF100" });
+        socket.emit("copy:clipboard", roomMessages[roomid]);
+      }
+    });
+
     socket.on("disconnect", () => {
       const playerData = player.get(socket.id);
       if (playerData) {
@@ -72,7 +79,7 @@ app.prepare().then(() => {
 
         roomMessages[roomid].push({
           text: `${playerData.name} left the room`,
-          color: "#740938",
+          color: "red",
         });
 
         io.to(roomid).emit("player:disconnect", {

@@ -37,11 +37,11 @@ const Home = () => {
   const handlePrivateRoom = (e: React.MouseEvent<HTMLButtonElement>) => {
     const roomid = generateRoomID();
     if (name) {
+      dispatch(setLoading(true));
       router.push(`/private-room/${roomid}?playerName=${name}`);
     } else {
       alert("Please enter a name");
     }
-    dispatch(setLoading(true));
   };
 
   const handlePlay = () => {
@@ -118,7 +118,7 @@ const Home = () => {
         </div>
       </section>
       {isLoading && (
-        <section className="w-full h-full opacity-50 flex justify-center items-center bg-white absolute inset-0">
+        <section className="w-full h-full opacity-70 flex justify-center items-center bg-white absolute inset-0">
           <Image
             width={100}
             height={100}
