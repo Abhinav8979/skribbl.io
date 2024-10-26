@@ -95,15 +95,7 @@ export default function Page() {
     }));
   };
 
-  const [invite, setInvite] = useState<boolean>(false);
   const socket: Socket = getSocket();
-
-  const handleCopyUrl = () => {
-    const pageUrl = window.location.origin + "/?" + roomid;
-    navigator.clipboard.writeText(pageUrl).then(() => {
-      setInvite(false);
-    });
-  };
 
   const CopyToClipboard = () => {
     const pageUrl = window.location.origin + "/?" + roomid;
@@ -176,34 +168,6 @@ export default function Page() {
           </button>
         </div>
       </main>
-
-      {invite && (
-        <section
-          className="absolute inset-0 bg-black  bg-opacity-30 min-h-screen flex justify-center items-center"
-          onClick={() => setInvite(false)}
-        >
-          <div
-            className="bg-white rounded-lg p-5 w-[300px] h-[200px] flex flex-col items-center justify-around"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-black text-lg font-medium text-center">
-              Invite your friends to join the game by sharing the link below:
-            </p>
-            <button
-              onClick={handleCopyUrl}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded mt-3"
-            >
-              Copy URL
-            </button>
-            <button
-              onClick={() => setInvite(false)}
-              className="text-red-500 font-semibold mt-2"
-            >
-              Close
-            </button>
-          </div>
-        </section>
-      )}
     </>
   );
 }
