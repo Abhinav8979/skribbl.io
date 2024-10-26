@@ -1,24 +1,39 @@
 {
-  "name": "skribble",
+  "name": "next-socket",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "nodemon",
+    "build": "next build && tsc --project tsconfig.server.json",
+    "start": "node dist/server.js"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.3.0",
+    "@tippyjs/react": "^4.2.6",
+    "next": "14.2.16",
+    "next-redux-wrapper": "^8.1.0",
     "react": "^18",
+    "react-canvas-draw": "^1.2.1",
     "react-dom": "^18",
-    "next": "14.2.16"
+    "react-icons": "^5.3.0",
+    "react-redux": "^9.1.2",
+    "react-rough": "^2.3.0",
+    "redux": "^5.0.1",
+    "redux-devtools-extension": "^2.13.9",
+    "redux-thunk": "^3.1.0",
+    "socket.io": "^4.8.0",
+    "socket.io-client": "^4.8.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "nodemon": "^3.1.5",
     "postcss": "^8",
-    "tailwindcss": "^3.4.1"
+    "prisma": "^5.21.1",
+    "tailwindcss": "^3.4.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
   }
 }
