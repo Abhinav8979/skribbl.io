@@ -35,6 +35,7 @@ export default function PrivateRoomLayout({
 
   const router = useRouter();
   const rounds = useAppSelector((state) => state.gameSetting.rounds);
+
   const socket = getSocket();
 
   const playerName = useMemo(() => sessionStorage.getItem("playerName"), []);
@@ -112,6 +113,7 @@ export default function PrivateRoomLayout({
         socket.off("playerList:update", onPlayerListUpdate);
         socket.off("player:disconnect", onPlayerDisconnect);
         socket.off("playerMessage:broadcast", onMessageBroadcast);
+        socket.off("copy:clipboard", onMessageBroadcast);
       };
     }
   }, [socket, playerName, roomid, router]);
@@ -184,13 +186,15 @@ interface PlayerBoardProps {
 }
 
 const PlayerBoard: React.FC<PlayerBoardProps> = ({ players }) => {
+  const { face, eye, mouth } = useAppSelector((state) => state.game?.avatar);
+  console.log(face, eye, mouth);
   return (
     <>
       {players && players.length > 0 ? (
         players.map((name, index) => (
           <div
             key={index}
-            className="p-2 my-1 text-sm text-black bg-white rounded-md border border-black flex justify-between"
+            className="p-2 my-1 gap-3 text-sm text-black bg-white rounded-md border border-black flex justify-between items-center"
           >
             <div>
               <p className="font-bold">#{index + 1}</p>
@@ -209,7 +213,33 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players }) => {
               {name}
               <p>0 points</p>
             </div>
-            <div>user character</div>
+            {/* <div>user character</div> */}
+            <div className="w-[70px] h-[70px] overflow-hidden mx-auto relative">
+              <div
+                className="w-full h-full bg-no-repeat z-10 absolute"
+                style={{
+                  backgroundImage: "url(/gif/color_atlas.gif)",
+                  backgroundSize: `${70 * 10}px auto`,
+                  backgroundPosition: `${600}px auto`,
+                }}
+              ></div>
+              <div
+                className="w-[70px] h-[90px] bg-no-repeat z-30 absolute top-[10%] left-[6%]"
+                style={{
+                  backgroundImage: "url(/gif/eyes_atlas.gif)",
+                  backgroundSize: `${70 * 10}px auto`,
+                  backgroundPosition: `-${eye * 140}px 0px`,
+                }}
+              ></div>
+              <div
+                className="w-[60px] h-[50px] bg-no-repeat z-30 absolute bottom-[19%] right-[2%]"
+                style={{
+                  backgroundImage: "url(/gif/mouth_atlas.gif)",
+                  backgroundSize: `${60 * 10}px auto`,
+                  backgroundPosition: `-${mouth * 120}px 3px`,
+                }}
+              ></div>
+            </div>
           </div>
         ))
       ) : (

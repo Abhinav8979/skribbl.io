@@ -19,7 +19,6 @@ const Home = () => {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector((state) => state.other.isLoading);
 
-  // Save name to sessionStorage
   const handleSave = () => {
     sessionStorage.setItem("playerName", name);
   };
@@ -139,7 +138,7 @@ const Home = () => {
       </section>
 
       {isLoading && (
-        <section className="w-full h-full opacity-70 flex justify-center items-center bg-white absolute inset-0">
+        <section className="w-full h-full opacity-70 flex justify-center items-center bg-white absolute inset-0 z-50">
           <Image
             width={100}
             height={100}

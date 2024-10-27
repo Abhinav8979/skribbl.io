@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useAppDispatch } from "../../redux/hooks";
+import { setAvatar } from "../../redux/actions/allActions";
 
 interface ArrowColorState {
   face: {
@@ -35,6 +37,7 @@ const Character = () => {
       right: false,
     },
   });
+  const dispatch = useAppDispatch();
 
   const facesPerRow = 10;
   const totalFaces = 28;
@@ -49,13 +52,13 @@ const Character = () => {
     };
   };
 
-  const itemsPerRow = 10; // 10 columns per row, 1 row total for eye/mouth
+  const itemsPerRow = 10;
   const eyeWidth = 100;
-  const eyeHeight = 80;
+  //   const eyeHeight = 80;
 
   const showAtlas = (index: number) => {
     return {
-      backgroundPosition: `-${index * eyeWidth}px 0px`, // Keep it in the first row
+      backgroundPosition: `-${index * eyeWidth}px 0px`,
     };
   };
 
@@ -90,6 +93,40 @@ const Character = () => {
     }));
   };
 
+  const onEye = () => {
+    setCurrentEyeIndex(prevIndex(currentEyeIndex, itemsPerRow));
+    dispatch(
+      setAvatar({
+        face: currentFaceIndex,
+        eye: currentEyeIndex,
+        mouth: currentMouthIndex,
+      })
+    );
+  };
+
+  const onMouth = () => {
+    setCurrentMouthIndex(prevIndex(currentMouthIndex, itemsPerRow));
+    console.log(currentMouthIndex);
+    dispatch(
+      setAvatar({
+        face: currentFaceIndex,
+        eye: currentEyeIndex,
+        mouth: currentMouthIndex,
+      })
+    );
+  };
+
+  const onFace = () => {
+    setCurrentFaceIndex(prevIndex(currentFaceIndex, totalFaces));
+    dispatch(
+      setAvatar({
+        face: currentFaceIndex,
+        eye: currentEyeIndex,
+        mouth: currentMouthIndex,
+      })
+    );
+  };
+
   return (
     <div className="relative flex items-center justify-center  bg-blue-800 p-2">
       {/* LEFT ARROW */}
@@ -97,9 +134,7 @@ const Character = () => {
       <div className="absolute left-[20%] bottom-0 flex flex-col space-y-2 transform">
         <div className="w-[29px] h-[28px] relative overflow-hidden">
           <div
-            onClick={() =>
-              setCurrentEyeIndex(prevIndex(currentEyeIndex, itemsPerRow))
-            }
+            onClick={onEye}
             onMouseEnter={() => setArrowColor("eye", "left")}
             onMouseLeave={() => setArrowColorToZero("eye")}
             style={{
@@ -116,9 +151,7 @@ const Character = () => {
 
         <div className="w-[29px] h-[28px] relative overflow-hidden">
           <div
-            onClick={() =>
-              setCurrentMouthIndex(prevIndex(currentMouthIndex, itemsPerRow))
-            }
+            onClick={onMouth}
             onMouseEnter={() => setArrowColor("mouth", "left")}
             onMouseLeave={() => setArrowColorToZero("mouth")}
             style={{
@@ -137,9 +170,7 @@ const Character = () => {
 
         <div className="w-[29px] h-[28px] relative overflow-hidden">
           <div
-            onClick={() =>
-              setCurrentFaceIndex(prevIndex(currentFaceIndex, totalFaces))
-            }
+            onClick={onFace}
             onMouseEnter={() => setArrowColor("face", "left")}
             onMouseLeave={() => setArrowColorToZero("face")}
             style={{
@@ -191,9 +222,7 @@ const Character = () => {
       <div className="absolute right-[20%] bottom-0 flex flex-col space-y-2 transform rotate-180">
         <div className="w-[29px] h-[28px] relative overflow-hidden">
           <div
-            onClick={() =>
-              setCurrentFaceIndex(nextIndex(currentFaceIndex, totalFaces))
-            }
+            onClick={onFace}
             onMouseEnter={() => setArrowColor("face", "right")}
             onMouseLeave={() => setArrowColorToZero("face")}
             style={{
@@ -212,9 +241,7 @@ const Character = () => {
 
         <div className="w-[29px] h-[28px] relative overflow-hidden">
           <div
-            onClick={() =>
-              setCurrentMouthIndex(nextIndex(currentMouthIndex, itemsPerRow))
-            }
+            onClick={onMouth}
             onMouseEnter={() => setArrowColor("mouth", "right")}
             onMouseLeave={() => setArrowColorToZero("mouth")}
             style={{
@@ -233,9 +260,7 @@ const Character = () => {
 
         <div className="w-[29px] h-[28px] overflow-hidden">
           <div
-            onClick={() =>
-              setCurrentEyeIndex(nextIndex(currentEyeIndex, itemsPerRow))
-            }
+            onClick={onEye}
             onMouseEnter={() => setArrowColor("eye", "right")}
             onMouseLeave={() => setArrowColorToZero("eye")}
             style={{
