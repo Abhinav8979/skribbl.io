@@ -272,7 +272,6 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
     setPlayerMessage(e.target.value);
   };
 
-  // Scroll to the bottom whenever the message list changes
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [message]);
@@ -287,7 +286,6 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
                 <span style={{ color: msg.color }}>{msg.text}</span>
               </p>
             ))}
-          {/* Ref to automatically scroll to the latest message */}
           <div ref={messageEndRef} />
         </div>
       </div>
