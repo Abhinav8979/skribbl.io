@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,7 +14,9 @@ import {
   setGamePlayers,
   setLoading,
 } from "../redux/actions/allActions";
-import { stat } from "fs";
+import Tippy from "@tippyjs/react";
+import "tippy.js/animations/scale-subtle.css";
+import "tippy.js/dist/tippy.css";
 
 interface Message {
   text: string;
@@ -26,8 +29,6 @@ export default function PrivateRoomLayout({
   children: React.ReactNode;
 }>) {
   const [isConnected, setIsConnected] = useState(false);
-  // const [players, setPlayers] = useState<string[]>([]);
-  // const [messages, setMessages] = useState<Message[]>([]);
 
   const messages = useAppSelector((state) => state.game?.messages);
   const players = useAppSelector((state) => state.game?.players);
@@ -147,14 +148,21 @@ export default function PrivateRoomLayout({
             <p>ROUND 1 OF {rounds}</p>
           </div>
           <p className="font-semibold">Waiting</p>
-          <div>
-            <Image
-              src="/gif/settings.gif"
-              alt="settings image"
-              height={50}
-              width={50}
-              unoptimized
-            />
+          <div className="cursor-pointer">
+            <Tippy
+              content="Setting"
+              animation="scale-subtle"
+              arrow={true}
+              placement="left"
+            >
+              <Image
+                src="/gif/settings.gif"
+                alt="settings image"
+                height={50}
+                width={50}
+                unoptimized
+              />
+            </Tippy>
           </div>
         </div>
         <div className="flex gap-2 justify-between w-full">

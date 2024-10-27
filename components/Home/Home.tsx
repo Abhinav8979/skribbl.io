@@ -1,25 +1,25 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
 import { generateRoomID } from "../../utils/utils";
 import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setLoading } from "../../redux/actions/allActions";
+import Character from "./Character";
 
 const Home = () => {
-  const [name, setName] = React.useState<string>("");
-  const [inviteRoomid, setInviteRoomid] = React.useState<string | null>("");
+  const [name, setName] = useState<string>("");
+  const [inviteRoomid, setInviteRoomid] = useState<string | null>(null);
 
   const router = useRouter();
-
   const searchParams = useSearchParams();
-
-  const isLoading = useAppSelector((state) => state.other.isLoading);
   const dispatch = useAppDispatch();
+  const isLoading = useAppSelector((state) => state.other.isLoading);
 
+  // Save name to sessionStorage
   const handleSave = () => {
     sessionStorage.setItem("playerName", name);
   };
@@ -34,7 +34,7 @@ const Home = () => {
     }
   };
 
-  const handlePrivateRoom = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handlePrivateRoom = () => {
     const roomid = generateRoomID();
     if (name) {
       dispatch(setLoading(true));
@@ -49,7 +49,7 @@ const Home = () => {
       if (inviteRoomid) {
         router.push(`/private-room/${inviteRoomid}?playerName=${name}`);
       } else {
-        // PLAYER WILL JOIN AN RANDOM GAME
+        // Logic for joining a random game can be added here
       }
     } else {
       alert("Please enter a name");
@@ -60,19 +60,16 @@ const Home = () => {
     dispatch(setLoading(false));
     const storedName = sessionStorage.getItem("playerName") || "";
     setName(storedName);
-    // setInviteRoomid(searchParams);
-    const paramKeys = Array.from(searchParams.keys());
 
+    const paramKeys = Array.from(searchParams.keys());
     setInviteRoomid(paramKeys[0]);
-  }, []);
+  }, [dispatch, searchParams]);
 
   return (
     <>
       <section
         className="h-[100vh] w-full bg-cover bg-center"
-        style={{
-          backgroundImage: `url(/icon/background1.png)`,
-        }}
+        style={{ backgroundImage: `url(/icon/background1.png)` }}
       >
         <div className="flex flex-col items-center justify-center h-full container mx-auto">
           <div className="mb-6">
@@ -88,19 +85,42 @@ const Home = () => {
             </Link>
           </div>
 
-          <div className="bg-panelBg shadow-lg rounded-custom p-4 w-[350px] text-center flex flex-col gap-4">
-            <div>
-              <input
-                type="text"
-                placeholder="Enter your name"
-                name="user-name"
-                value={name}
-                onChange={onChange}
-                onKeyDown={onKeyDown}
-                onBlur={handleSave}
-                className="w-full p-3 border border-gray-300 rounded-custom text-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
+          <div className="bg-panelBg shadow-lg rounded-custom p-4 w-[350px] text-center flex flex-col gap-2">
+            <div className="flex justify-between gap-4">
+              <div className="flex items-end">
+                <input
+                  type="text"
+                  placeholder="Enter your name"
+                  name="user-name"
+                  value={name}
+                  onChange={onChange}
+                  onKeyDown={onKeyDown}
+                  onBlur={handleSave}
+                  className="w-full p-1 border rounded-custom text-sm text-left focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label
+                  htmlFor="language-select"
+                  className="block mt-2 text-white text-sm whitespace-nowrap"
+                >
+                  Select Language
+                </label>
+                <select
+                  id="language-select"
+                  name="language"
+                  defaultValue="English"
+                  className="w-full p-1 text-sm mt-1  rounded-custom  text-left focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="English">English</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="French">French</option>
+                </select>
+              </div>
             </div>
+
+            <Character />
+
             <button
               onClick={handlePlay}
               className="bg-[#53E237] hover:bg-[#38C41C] transition-all font-bold text-white rounded-custom py-3"
@@ -110,13 +130,14 @@ const Home = () => {
 
             <button
               onClick={handlePrivateRoom}
-              className="bg-[#1671c5] hover:bg-[#133F8C] transition-all font-bold text-white rounded-custom py-3"
+              className="bg-[#1671c5] hover:bg-[#1671C5] transition-all font-bold text-white rounded-custom py-3"
             >
               Create Private Room
             </button>
           </div>
         </div>
       </section>
+
       {isLoading && (
         <section className="w-full h-full opacity-70 flex justify-center items-center bg-white absolute inset-0">
           <Image
