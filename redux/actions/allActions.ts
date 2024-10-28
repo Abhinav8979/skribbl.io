@@ -52,6 +52,5 @@ export const setGamePlayers =
   };
 
 export const setAvatar = (avatar: avatar) => (dispatch: AppDispatch) => {
-  console.log(avatar);
   dispatch(SET_AVATAR(avatar));
 };

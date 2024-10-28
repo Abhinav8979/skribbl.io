@@ -18,6 +18,7 @@ const Home = () => {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector((state) => state.other.isLoading);
+  const avatar = useAppSelector((state) => state.game.avatar);
 
   const handleSave = () => {
     sessionStorage.setItem("playerName", name);
@@ -37,6 +38,9 @@ const Home = () => {
     const roomid = generateRoomID();
     if (name) {
       dispatch(setLoading(true));
+      sessionStorage.setItem("avatarEye", avatar.eye.toString());
+      sessionStorage.setItem("avatarFace", avatar.face.toString());
+      sessionStorage.setItem("avatarMouth", avatar.mouth.toString());
       router.push(`/private-room/${roomid}?playerName=${name}`);
     } else {
       alert("Please enter a name");
@@ -46,6 +50,10 @@ const Home = () => {
   const handlePlay = () => {
     if (name) {
       if (inviteRoomid) {
+        sessionStorage.setItem("avatarEye", avatar.eye.toString());
+        sessionStorage.setItem("avatarFace", avatar.face.toString());
+        sessionStorage.setItem("avatarMouth", avatar.mouth.toString());
+
         router.push(`/private-room/${inviteRoomid}?playerName=${name}`);
       } else {
         // Logic for joining a random game can be added here

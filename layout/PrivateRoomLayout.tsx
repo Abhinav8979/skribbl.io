@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { Socket } from "socket.io-client";
 import { getSocket } from "../app/socket";
 import {
+  setAvatar,
   setGameMessage,
   setGamePlayers,
   setLoading,
@@ -83,6 +84,21 @@ export default function PrivateRoomLayout({
 
   useEffect(() => {
     dispatch(setLoading(false));
+    const eye = sessionStorage.getItem("avatarEye") || 0;
+    const mouth = sessionStorage.getItem("avatarMouth") || 0;
+    const face = sessionStorage.getItem("avatarFace") || 0;
+
+    if (eye && mouth && face) {
+      dispatch(
+        setAvatar({
+          eye: parseInt(eye),
+          mouth: parseInt(mouth),
+          face: parseInt(face),
+        })
+      );
+    } else {
+      router.push("/");
+    }
   }, []);
 
   useEffect(() => {
@@ -187,14 +203,40 @@ interface PlayerBoardProps {
 
 const PlayerBoard: React.FC<PlayerBoardProps> = ({ players }) => {
   const { face, eye, mouth } = useAppSelector((state) => state.game?.avatar);
-  console.log(face, eye, mouth);
+  // console.log(face, eye, mouth);
+
+  const facesPerRow = 10,
+    totalFaces = 28,
+    faceWidth = 120,
+    faceHeight = 120;
+
+  const eyesPerRow = 10,
+    totalEyes = 61,
+    eyeWidth = 100,
+    eyeHeight = 101;
+
+  const mouthsPerRow = 10,
+    totalMouths = 67,
+    mouthWidth = 100,
+    mouthHeight = 101;
+
+  const calculateBackgroundPosition = (
+    index: number,
+    itemsPerRow: number,
+    width: number,
+    height: number
+  ) => {
+    const row = Math.floor(index / itemsPerRow);
+    const col = index % itemsPerRow;
+    return { backgroundPosition: `-${col * width}px -${row * height}px` };
+  };
   return (
     <>
       {players && players.length > 0 ? (
         players.map((name, index) => (
           <div
             key={index}
-            className="p-2 my-1 gap-3 text-sm text-black bg-white rounded-md border border-black flex justify-between items-center"
+            className="pl-2 my-1 gap-3 text-sm text-black bg-white rounded-md border border-black flex justify-between items-center h-[68px]"
           >
             <div>
               <p className="font-bold">#{index + 1}</p>
@@ -211,32 +253,47 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players }) => {
             </div>
             <div className="flex justify-center flex-col">
               {name}
-              <p>0 points</p>
+              <p className="whitespace-nowrap">0 points</p>
             </div>
             {/* <div>user character</div> */}
-            <div className="w-[70px] h-[70px] overflow-hidden mx-auto relative">
+            <div className="w-[120px] h-[120px] overflow-hidden mx-auto relative   scale-[.6] items-center">
               <div
-                className="w-full h-full bg-no-repeat z-10 absolute"
+                className="w-full h-full bg-no-repeat absolute"
                 style={{
                   backgroundImage: "url(/gif/color_atlas.gif)",
-                  backgroundSize: `${70 * 10}px auto`,
-                  backgroundPosition: `${600}px auto`,
+                  backgroundSize: `${faceWidth * facesPerRow}px auto`,
+                  ...calculateBackgroundPosition(
+                    face,
+                    facesPerRow,
+                    faceWidth,
+                    faceHeight
+                  ),
                 }}
               ></div>
               <div
-                className="w-[70px] h-[90px] bg-no-repeat z-30 absolute top-[10%] left-[6%]"
+                className="w-[100px] h-[80px] bg-no-repeat absolute top-[10%] left-[6%]"
                 style={{
                   backgroundImage: "url(/gif/eyes_atlas.gif)",
-                  backgroundSize: `${70 * 10}px auto`,
-                  backgroundPosition: `-${eye * 140}px 0px`,
+                  backgroundSize: `${eyeWidth * eyesPerRow}px auto`,
+                  ...calculateBackgroundPosition(
+                    eye,
+                    eyesPerRow,
+                    eyeWidth,
+                    eyeHeight
+                  ),
                 }}
               ></div>
               <div
-                className="w-[60px] h-[50px] bg-no-repeat z-30 absolute bottom-[19%] right-[2%]"
+                className="w-[100px] h-[80px] bg-no-repeat absolute bottom-[22%] left-[8%]"
                 style={{
                   backgroundImage: "url(/gif/mouth_atlas.gif)",
-                  backgroundSize: `${60 * 10}px auto`,
-                  backgroundPosition: `-${mouth * 120}px 3px`,
+                  backgroundSize: `${mouthWidth * mouthsPerRow}px auto`,
+                  ...calculateBackgroundPosition(
+                    mouth,
+                    mouthsPerRow,
+                    mouthWidth,
+                    mouthHeight
+                  ),
                 }}
               ></div>
             </div>
