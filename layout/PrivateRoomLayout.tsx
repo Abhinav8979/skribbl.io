@@ -147,7 +147,7 @@ export default function PrivateRoomLayout({
         <Link href="/">
           <Image
             alt="skrible.io"
-            src="/gif/logo.gif"
+            src="/gif/logo_halloween.gif"
             height={320}
             width={320}
             priority

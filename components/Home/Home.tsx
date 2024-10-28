@@ -49,13 +49,15 @@ const Home = () => {
 
   const handlePlay = () => {
     if (name) {
-      if (inviteRoomid) {
-        sessionStorage.setItem("avatarEye", avatar.eye.toString());
-        sessionStorage.setItem("avatarFace", avatar.face.toString());
-        sessionStorage.setItem("avatarMouth", avatar.mouth.toString());
+      sessionStorage.setItem("avatarEye", avatar.eye.toString());
+      sessionStorage.setItem("avatarFace", avatar.face.toString());
+      sessionStorage.setItem("avatarMouth", avatar.mouth.toString());
 
+      if (inviteRoomid) {
         router.push(`/private-room/${inviteRoomid}?playerName=${name}`);
       } else {
+        router.push(`/play`);
+
         // Logic for joining a random game can be added here
       }
     } else {
@@ -84,7 +86,7 @@ const Home = () => {
               <Image
                 unoptimized
                 alt="skrible.io"
-                src="/gif/logo.gif"
+                src="/gif/logo_halloween.gif"
                 height={500}
                 width={500}
                 priority
