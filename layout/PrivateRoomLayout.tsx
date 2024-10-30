@@ -14,6 +14,7 @@ import {
   setGameMessage,
   setGamePlayers,
   setLoading,
+  setPlay,
 } from "../redux/actions/allActions";
 import Tippy from "@tippyjs/react";
 import "tippy.js/animations/scale-subtle.css";
@@ -82,6 +83,10 @@ export default function PrivateRoomLayout({
     dispatch(setGameMessage(messages));
   };
 
+  const onGameStart = (kk: boolean) => {
+    dispatch(setPlay(kk));
+  };
+
   useEffect(() => {
     dispatch(setLoading(false));
     const eye = sessionStorage.getItem("avatarEye") || 0;
@@ -123,6 +128,7 @@ export default function PrivateRoomLayout({
       socket.on("playerMessage:broadcast", onMessageBroadcast);
       socket.on("player:disconnect", onPlayerDisconnect);
       socket.on("copy:clipboard", onMessageBroadcast);
+      socket.on("start", onGameStart);
 
       return () => {
         socket.off("connect", onConnect);
@@ -130,6 +136,7 @@ export default function PrivateRoomLayout({
         socket.off("player:disconnect", onPlayerDisconnect);
         socket.off("playerMessage:broadcast", onMessageBroadcast);
         socket.off("copy:clipboard", onMessageBroadcast);
+        socket.off("start", onGameStart);
       };
     }
   }, [socket, playerName, roomid, router]);

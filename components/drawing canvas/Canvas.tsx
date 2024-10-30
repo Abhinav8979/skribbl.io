@@ -1,21 +1,21 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { ReactSketchCanvas, ReactSketchCanvasRef } from "react-sketch-canvas";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
+import { getSocket } from "../../app/socket";
+import { useParams } from "next/navigation";
+import debounce from "lodash.debounce";
 
-interface CanvasProps {
-  setCanvasData: (data: any) => void;
-  initialData?: any;
-}
-
-const Canvas: React.FC<CanvasProps> = ({ setCanvasData, initialData }) => {
+const Canvas: React.FC = () => {
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
   const [strokeColor, setStrokeColor] = useState("black");
   const [strokeWidth, setStrokeWidth] = useState(4);
   const [eraseMode, setEraseMode] = useState(false);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  const { roomid } = useParams();
+  const socket = getSocket();
 
   const colors = [
     "#000000",
@@ -45,21 +45,28 @@ const Canvas: React.FC<CanvasProps> = ({ setCanvasData, initialData }) => {
   ];
 
   useEffect(() => {
-    if (initialData && initialData.length > 0) {
-      canvasRef.current?.loadPaths(initialData);
-    }
-  }, [initialData]);
+    socket.on("player:draw", ({ drawingData }) => {
+      canvasRef.current?.loadPaths(drawingData);
+    });
 
-  const handleSaveDrawing = async () => {
-    try {
-      const drawingData = await canvasRef.current?.exportPaths();
-      if (drawingData) {
-        setCanvasData(drawingData);
+    return () => {
+      socket.off("player:draw");
+    };
+  }, []);
+
+  const handleDrawingSave = useCallback(
+    debounce(async () => {
+      try {
+        const drawingData = await canvasRef.current?.exportPaths();
+        if (drawingData) {
+          socket.emit("player:draw", { drawingData, roomid });
+        }
+      } catch (error) {
+        console.error("Error saving drawing:", error);
       }
-    } catch (error) {
-      console.error("Error saving drawing:", error);
-    }
-  };
+    }, 300), // Debounce interval in ms
+    [roomid]
+  );
 
   const handleClearCanvas = () => {
     canvasRef.current?.clearCanvas();
@@ -95,6 +102,7 @@ const Canvas: React.FC<CanvasProps> = ({ setCanvasData, initialData }) => {
           border: "1px solid #000",
           borderRadius: "8px",
         }}
+        onChange={handleDrawingSave}
       />
 
       <div className="space-y-2">
@@ -141,7 +149,6 @@ const Canvas: React.FC<CanvasProps> = ({ setCanvasData, initialData }) => {
                     backgroundRepeat: "no-repeat",
                     width: "32px",
                     height: "32px",
-
                     transform: "scale(1)",
                     transition: "transform 0.1s",
                   }}
@@ -170,7 +177,6 @@ const Canvas: React.FC<CanvasProps> = ({ setCanvasData, initialData }) => {
                     backgroundRepeat: "no-repeat",
                     width: "32px",
                     height: "32px",
-
                     transform: "scale(1)",
                     transition: "transform 0.1s",
                   }}
@@ -201,7 +207,6 @@ const Canvas: React.FC<CanvasProps> = ({ setCanvasData, initialData }) => {
                     backgroundRepeat: "no-repeat",
                     width: "32px",
                     height: "32px",
-
                     transform: "scale(1)",
                     transition: "transform 0.1s",
                   }}

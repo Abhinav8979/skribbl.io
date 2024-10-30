@@ -1,6 +1,6 @@
 import { AppDispatch } from "../store";
 import { SET_GAME_SETTING } from "../features/game/gameSetting";
-import { SET_ERROR, SET_LOADING } from "../features/other/otherSlice";
+import { SET_ERROR, SET_LOADING, SET_PLAY } from "../features/other/otherSlice";
 import {
   SET_AVATAR,
   SET_GAME_MESSAGE,
@@ -53,4 +53,8 @@ export const setGamePlayers =
 
 export const setAvatar = (avatar: avatar) => (dispatch: AppDispatch) => {
   dispatch(SET_AVATAR(avatar));
+};
+
+export const setPlay = (confirm: boolean) => (dispatch: AppDispatch) => {
+  dispatch(SET_PLAY(confirm));
 };

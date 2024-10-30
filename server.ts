@@ -67,6 +67,14 @@ app.prepare().then(() => {
       }
     });
 
+    socket.on("player:draw", ({ drawingData, roomid }) => {
+      io.to(roomid).emit("player:draw", { drawingData, id: socket.id });
+    });
+
+    socket.on("start:game", (roomid) => {
+      io.to(roomid).emit("start", true);
+    });
+
     socket.on("disconnect", () => {
       const playerData = player.get(socket.id);
       if (playerData) {

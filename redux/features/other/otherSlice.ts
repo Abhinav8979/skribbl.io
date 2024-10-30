@@ -4,6 +4,7 @@ const initialState = {
   isLoading: false,
   isPrivateRoom: false,
   isError: false,
+  Play: false,
 };
 
 const otherSlice = createSlice({
@@ -16,9 +17,12 @@ const otherSlice = createSlice({
     SET_ERROR: (state, action) => {
       state.isError = action.payload;
     },
+    SET_PLAY: (state, action) => {
+      state.Play = action.payload;
+    },
   },
 });
 
-export const { SET_LOADING, SET_ERROR } = otherSlice.actions;
+export const { SET_LOADING, SET_ERROR, SET_PLAY } = otherSlice.actions;
 
 export default otherSlice.reducer;

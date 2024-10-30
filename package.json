@@ -10,6 +10,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.3.0",
     "@tippyjs/react": "^4.2.6",
+    "lodash.debounce": "^4.0.8",
     "next": "14.2.16",
     "next-redux-wrapper": "^8.1.0",
     "react": "^18",
@@ -27,6 +28,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
