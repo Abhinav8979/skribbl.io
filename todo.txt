@@ -2,4 +2,4 @@
 TO DO:
 
 1.On clicking the play button the player will join any random game if invteRoomId is not there
-2. different players are having  same avatar ( WE WILL SEND AVATAR CODE TO THE SOCKET AND WILL UPDATE THE PLAYER LIST AND WILL THEN RENDER IT)
+2. Invite Modal when we click on the chracter

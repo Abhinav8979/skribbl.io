@@ -1,21 +1,19 @@
-"use client";
-
-import React, { useRef, useState, useEffect, useCallback } from "react";
-import { ReactSketchCanvas, ReactSketchCanvasRef } from "react-sketch-canvas";
-import Tippy from "@tippyjs/react";
-import "tippy.js/dist/tippy.css";
+import React, { useRef, useState, useEffect } from "react";
+import { Stage, Layer, Line, Rect } from "react-konva";
 import { getSocket } from "../../app/socket";
 import { useParams } from "next/navigation";
-import debounce from "lodash.debounce";
+import Tippy from "@tippyjs/react";
+import "tippy.js/dist/tippy.css";
 
-const Canvas: React.FC = () => {
-  const canvasRef = useRef<ReactSketchCanvasRef>(null);
-  const [strokeColor, setStrokeColor] = useState("black");
-  const [strokeWidth, setStrokeWidth] = useState(4);
-  const [eraseMode, setEraseMode] = useState(false);
-  const [selectedTool, setSelectedTool] = useState<string | null>(null);
-  const { roomid } = useParams();
+const DrawingBoard: React.FC = () => {
+  const [tool, setTool] = useState<"brush" | "eraser">("brush");
+  const [lines, setLines] = useState<any[]>([]);
+  const [strokeColor, setStrokeColor] = useState("#000000");
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [strokeWidth, setStrokeWidth] = useState(1);
+
   const socket = getSocket();
+  const { roomid } = useParams();
 
   const colors = [
     "#000000",
@@ -45,214 +43,196 @@ const Canvas: React.FC = () => {
   ];
 
   useEffect(() => {
-    socket.on("player:draw", ({ drawingData }) => {
-      canvasRef.current?.loadPaths(drawingData);
+    socket.on("player:draw", (data) => {
+      setLines((prevLines) => [...prevLines, data]);
+    });
+    socket.on("clear:canvas", (drawindData) => {
+      setLines(drawindData);
     });
 
     return () => {
       socket.off("player:draw");
+      socket.off("clear:canvas");
     };
-  }, []);
+  }, [socket]);
 
-  const handleDrawingSave = useCallback(
-    debounce(async () => {
-      try {
-        const drawingData = await canvasRef.current?.exportPaths();
-        if (drawingData) {
-          socket.emit("player:draw", { drawingData, roomid });
-        }
-      } catch (error) {
-        console.error("Error saving drawing:", error);
-      }
-    }, 300), // Debounce interval in ms
-    [roomid]
-  );
+  const handleMouseDown = (e: any) => {
+    const pos = e.target.getStage().getPointerPosition();
+    setIsDrawing(true);
+    const newLine = {
+      tool,
+      color: tool === "eraser" ? "#ffffff" : strokeColor,
+      strokeWidth,
+      points: [pos.x, pos.y],
+    };
+    setLines((prevLines) => [...prevLines, newLine]);
+  };
+
+  const handleStrokeWidthChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setStrokeWidth(Number(event.target.value));
+  };
+
+  const handleMouseMove = (e: any) => {
+    if (!isDrawing) return;
+
+    const stage = e.target.getStage();
+    const point = stage.getPointerPosition();
+    const lastLine = lines[lines.length - 1];
+    if (!lastLine) return;
+
+    lastLine.points = lastLine.points.concat([point.x, point.y]);
+    setLines([...lines]);
+    socket.emit("player:draw", { drawingData: lastLine, roomid });
+  };
+
+  const handleMouseUp = () => setIsDrawing(false);
 
   const handleClearCanvas = () => {
-    canvasRef.current?.clearCanvas();
-    setSelectedTool("clear");
+    setLines([]);
+    socket.emit("clear:canvas", roomid);
   };
 
   const handleUndo = () => {
-    canvasRef.current?.undo();
-    setSelectedTool("undo");
+    setLines((prevLines) => prevLines.slice(0, -1));
   };
 
   const toggleEraseMode = () => {
-    setEraseMode(!eraseMode);
-    setSelectedTool("erase");
-    setStrokeColor("white");
+    setTool((prevTool) => (prevTool === "eraser" ? "brush" : "eraser"));
   };
 
-  const toggleBrushMode = () => {
-    setEraseMode(false);
-    setSelectedTool("brush");
-    setStrokeColor("black");
+  const handleToolClick = (selectedTool: "brush" | "eraser") => {
+    setTool(selectedTool);
   };
 
   return (
-    <section className="relative">
-      <ReactSketchCanvas
-        ref={canvasRef}
-        strokeWidth={strokeWidth}
-        strokeColor={eraseMode ? "white" : strokeColor}
-        width="100%"
-        height="500px"
-        style={{
-          border: "1px solid #000",
-          borderRadius: "8px",
-        }}
-        onChange={handleDrawingSave}
-      />
+    <div className="flex flex-col w-full">
+      <Stage
+        width={800}
+        height={565}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      >
+        {/* Background Layer */}
+        <Layer>
+          <Rect width={800} height={600} fill="white" />
+        </Layer>
 
-      <div className="space-y-2">
-        <div className="flex gap-2 justify-between items-center ">
-          <div className="mt-4">
-            <div className="flex flex-wrap w-[300px]">
-              {colors.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => {
-                    setStrokeColor(color);
-                    setEraseMode(false);
-                    setSelectedTool(null);
-                  }}
-                  style={{
-                    backgroundColor: color,
-                    width: "24px",
-                    height: "24px",
-                    border:
-                      strokeColor === color && !eraseMode
-                        ? "2px solid #000"
-                        : "2px solid transparent",
-                    cursor: "pointer",
-                  }}
-                ></button>
-              ))}
+        {/* Drawing Layer */}
+        <Layer>
+          {lines.map((line, i) => (
+            <Line
+              key={i}
+              points={line.points}
+              stroke={line.tool === "eraser" ? "white" : line.color}
+              strokeWidth={line.strokeWidth}
+              lineCap="round"
+              lineJoin="round"
+              globalCompositeOperation={
+                line.tool === "eraser" ? "destination-out" : "source-over"
+              }
+            />
+          ))}
+        </Layer>
+      </Stage>
+
+      <div className="flex gap-2 justify-between items-center mt-2">
+        <div className="flex flex-wrap w-[300px]">
+          {colors.map((color) => (
+            <button
+              key={color}
+              onClick={() => setStrokeColor(color)}
+              style={{
+                backgroundColor: color,
+                width: "24px",
+                height: "24px",
+                cursor: "pointer",
+              }}
+            />
+          ))}
+        </div>
+        <div className="flex items-center justify-between bg-white text-black p-[3px] rounded-custom">
+          <label className="mr-2 font-semibold">Stroke Width:</label>
+          <select
+            className="border rounded-md p-1 bg-white text-black"
+            value={strokeWidth}
+            onChange={handleStrokeWidthChange}
+          >
+            {[1, 3, 5, 7].map((width) => (
+              <option key={width} value={width}>
+                {width}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex gap-1">
+          <Tippy content="Brush">
+            <div
+              className={`rounded-custom flex items-center justify-center ${
+                tool === "brush" ? "bg-purple-500" : "bg-white"
+              } transition-transform transform active:scale-90`}
+            >
+              <button
+                onClick={() => handleToolClick("brush")}
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  background: "url(/gif/pen.gif)",
+                  backgroundSize: "contain",
+                }}
+              />
             </div>
-          </div>
-
-          <div className="flex gap-1">
-            <Tippy content="Brush">
-              <div
+          </Tippy>
+          <Tippy content="Eraser">
+            <div
+              className={`rounded-custom flex items-center justify-center ${
+                tool === "eraser" ? "bg-purple-500" : "bg-white"
+              } transition-transform transform active:scale-90`}
+            >
+              <button
+                onClick={toggleEraseMode}
                 style={{
-                  backgroundColor:
-                    selectedTool === "brush" ? "purple" : "white",
+                  width: "32px",
+                  height: "32px",
+                  background: "url(/gif/eraser.gif)",
+                  backgroundSize: "contain",
                 }}
-                className="p-1 rounded-custom flex items-center"
-              >
-                <button
-                  onClick={toggleBrushMode}
-                  style={{
-                    backgroundImage: "url(/gif/pen.gif)",
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                    width: "32px",
-                    height: "32px",
-                    transform: "scale(1)",
-                    transition: "transform 0.1s",
-                  }}
-                  onMouseDown={(e) =>
-                    (e.currentTarget.style.transform = "scale(0.9)")
-                  }
-                  onMouseUp={(e) =>
-                    (e.currentTarget.style.transform = "scale(1)")
-                  }
-                ></button>
-              </div>
-            </Tippy>
-            <Tippy content="Clear Canvas">
-              <div
+              />
+            </div>
+          </Tippy>
+          <Tippy content="Clear Canvas">
+            <div className="bg-white rounded-custom flex items-center justify-center transition-transform transform active:scale-90">
+              <button
+                onClick={handleClearCanvas}
                 style={{
-                  backgroundColor:
-                    selectedTool === "clear" ? "purple" : "white",
+                  width: "32px",
+                  height: "32px",
+                  background: "url(/gif/clear.gif)",
+                  backgroundSize: "contain",
                 }}
-                className="p-1 rounded-custom flex items-center"
-              >
-                <button
-                  onClick={handleClearCanvas}
-                  style={{
-                    backgroundImage: "url(/gif/clear.gif)",
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                    width: "32px",
-                    height: "32px",
-                    transform: "scale(1)",
-                    transition: "transform 0.1s",
-                  }}
-                  onMouseDown={(e) =>
-                    (e.currentTarget.style.transform = "scale(0.9)")
-                  }
-                  onMouseUp={(e) =>
-                    (e.currentTarget.style.transform = "scale(1)")
-                  }
-                ></button>
-              </div>
-            </Tippy>
-          </div>
-
-          <div className="flex gap-1">
-            <Tippy content="Undo">
-              <div
+              />
+            </div>
+          </Tippy>
+          <Tippy content="Undo">
+            <div className="bg-white rounded-custom flex items-center justify-center transition-transform transform active:scale-90">
+              <button
+                onClick={handleUndo}
                 style={{
-                  backgroundColor: selectedTool === "undo" ? "purple" : "white",
+                  width: "32px",
+                  height: "32px",
+                  background: "url(/gif/undo.gif)",
+                  backgroundSize: "contain",
                 }}
-                className="p-1 rounded-custom flex items-center"
-              >
-                <button
-                  onClick={handleUndo}
-                  style={{
-                    backgroundImage: "url(/gif/undo.gif)",
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                    width: "32px",
-                    height: "32px",
-                    transform: "scale(1)",
-                    transition: "transform 0.1s",
-                  }}
-                  onMouseDown={(e) =>
-                    (e.currentTarget.style.transform = "scale(0.9)")
-                  }
-                  onMouseUp={(e) =>
-                    (e.currentTarget.style.transform = "scale(1)")
-                  }
-                ></button>
-              </div>
-            </Tippy>
-
-            <Tippy content="Toggle Erase Mode">
-              <div
-                style={{
-                  backgroundColor:
-                    selectedTool === "erase" ? "purple" : "white",
-                }}
-                className="rounded-custom flex items-center"
-              >
-                <button
-                  onClick={toggleEraseMode}
-                  style={{
-                    backgroundImage: "url(/gif/eraser.gif)",
-                    backgroundSize: "contain",
-                    backgroundRepeat: "no-repeat",
-                    width: "32px",
-                    height: "32px",
-                    transform: "scale(1)",
-                    transition: "transform 0.1s",
-                  }}
-                  onMouseDown={(e) =>
-                    (e.currentTarget.style.transform = "scale(0.9)")
-                  }
-                  onMouseUp={(e) =>
-                    (e.currentTarget.style.transform = "scale(1)")
-                  }
-                ></button>
-              </div>
-            </Tippy>
-          </div>
+              />
+            </div>
+          </Tippy>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 
-export default Canvas;
+export default DrawingBoard;

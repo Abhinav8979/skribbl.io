@@ -21,6 +21,11 @@ interface SetGameMessageAction {
   type: string;
   payload: Message[];
 }
+interface Player {
+  name: string;
+  socketId: string;
+  avatar: [number, number, number];
+}
 
 const gameInformationSlice = createSlice({
   name: "gameSetting",

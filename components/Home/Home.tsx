@@ -8,7 +8,7 @@ import { generateRoomID } from "../../utils/utils";
 import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setLoading } from "../../redux/actions/allActions";
-import Character from "./Character";
+import Character from "./CharacterEdit";
 
 const Home = () => {
   const [name, setName] = useState<string>("");

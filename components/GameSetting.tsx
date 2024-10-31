@@ -4,17 +4,19 @@ import Image from "next/image";
 import { FaUserPlus } from "react-icons/fa";
 import React, { useEffect, useState } from "react";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Socket } from "socket.io-client";
-import { useAppDispatch } from "../redux/hooks";
-import { setGameSetting, setPlay } from "../redux/actions/allActions";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { setGameSetting } from "../redux/actions/allActions";
 import { getSocket } from "../app/socket";
 
 const GameSetting = () => {
   type SettingOption = number | string;
 
   const { roomid } = useParams();
-  const router = useRouter();
+
+  const isOwner = useAppSelector((state) => state?.other?.PlayerOwner);
+  console.log(isOwner);
 
   interface Setting {
     name: string;
@@ -105,15 +107,19 @@ const GameSetting = () => {
   const CopyToClipboard = () => {
     const pageUrl = window.location.origin + "/?" + roomid;
     navigator.clipboard.writeText(pageUrl).then(() => {
-      socket.emit("copy:clipboard", {
-        message: "Copied room link to clipboard!",
-        roomid,
-      });
+      socket.emit("copy:clipboard", roomid);
     });
   };
 
   return (
-    <main className="flex p-2 flex-col gap-1 bg-[#35394A] rounded-custom text-white">
+    <main
+      style={{
+        cursor: isOwner ? "default" : "not-allowed",
+      }}
+      className="flex p-2 flex-col gap-1 bg-[#35394A] rounded-custom text-white relative"
+    >
+      {!isOwner && <div className="absolute inset-0 bg-black opacity-40"></div>}
+
       {setting.map((ele, index) => (
         <div key={index} className="flex justify-between items-center py-1">
           <div className="flex items-center gap-2">

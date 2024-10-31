@@ -9,7 +9,15 @@ const port = 3001;
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 
-let player: Map<string, { name: string; roomid: string }> = new Map();
+let player: Map<
+  string,
+  {
+    name: string;
+    socketId: string;
+    avatar: [string, string, string];
+  }[]
+> = new Map();
+
 interface Message {
   text: string;
   color: string;
@@ -22,31 +30,38 @@ app.prepare().then(() => {
   const io = new Server(httpServer);
 
   io.on("connection", (socket: Socket) => {
-    socket.on("player:connected", ({ name, roomid }) => {
+    socket.on("player:connected", ({ name, roomid, avatar }) => {
       if (!roomMessages[roomid]) {
         roomMessages[roomid] = [];
       }
+      console.log(avatar);
 
       if (roomMessages[roomid].length === 0) {
         roomMessages[roomid].push({
           text: `${name} is the owner of the room`,
           color: "#BED754",
         });
-      } else if (!player.get(socket.id)) {
+      } else if (
+        !Array.from(player.values()).some((p) =>
+          p.some((pl) => pl.socketId === socket.id)
+        )
+      ) {
         roomMessages[roomid].push({
           text: `${name} joined the room`,
           color: "#03C988",
         });
       }
 
-      player.set(socket.id, { name, roomid });
-      const playerList = Array.from(player.values())
-        .filter((p) => p.roomid === roomid)
-        .map((p) => p.name);
+      const newPlayer = { name, socketId: socket.id, avatar };
+      const playersInRoom = player.get(roomid) || [];
+      playersInRoom.push(newPlayer);
+      player.set(roomid, playersInRoom);
+
+      // const playerList = playersInRoom.map((p) => p.name);
 
       socket.join(roomid);
       io.to(roomid).emit("playerList:update", {
-        playerList,
+        playerList: playersInRoom,
         messages: roomMessages[roomid],
       });
     });
@@ -60,15 +75,19 @@ app.prepare().then(() => {
       }
     });
 
-    socket.on("copy:clipboard", ({ message, roomid }) => {
-      if (message && roomid) {
-        roomMessages[roomid].push({ text: message, color: "#FFF100" });
-        socket.emit("copy:clipboard", roomMessages[roomid]);
+    socket.on("copy:clipboard", (roomid) => {
+      if (roomid) {
+        // roomMessages[roomid].push({ text: message, color: "#FFF100" });
+        socket.emit("copy:clipboard", "Copied room link to clipboard!");
       }
     });
 
     socket.on("player:draw", ({ drawingData, roomid }) => {
-      io.to(roomid).emit("player:draw", { drawingData, id: socket.id });
+      io.to(roomid).emit("player:draw", drawingData);
+    });
+
+    socket.on("clear:canvas", (roomid) => {
+      io.to(roomid).emit("clear:canvas", []);
     });
 
     socket.on("start:game", (roomid) => {
@@ -76,14 +95,26 @@ app.prepare().then(() => {
     });
 
     socket.on("disconnect", () => {
-      const playerData = player.get(socket.id);
-      if (playerData) {
-        const { roomid } = playerData;
-        player.delete(socket.id);
+      let roomid;
+      let playerData;
 
-        const playerList = Array.from(player.values())
-          .filter((p) => p.roomid === roomid)
-          .map((p) => p.name);
+      for (const [room, players] of player.entries()) {
+        const index = players.findIndex((p) => p.socketId === socket.id);
+        if (index !== -1) {
+          roomid = room;
+          playerData = players[index];
+          players.splice(index, 1);
+          break;
+        }
+      }
+
+      if (roomid && playerData) {
+        if (player.get(roomid)?.length === 0) {
+          player.delete(roomid);
+          delete roomMessages[roomid];
+        }
+
+        const playerList = (player.get(roomid) || []).map((p) => p.name);
 
         roomMessages[roomid].push({
           text: `${playerData.name} left the room`,
@@ -94,10 +125,6 @@ app.prepare().then(() => {
           playerList,
           messages: roomMessages[roomid],
         });
-
-        if (playerList.length === 0) {
-          delete roomMessages[roomid];
-        }
       }
     });
   });

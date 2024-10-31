@@ -5,6 +5,7 @@ const initialState = {
   isPrivateRoom: false,
   isError: false,
   Play: false,
+  PlayerOwner: false,
 };
 
 const otherSlice = createSlice({
@@ -20,9 +21,13 @@ const otherSlice = createSlice({
     SET_PLAY: (state, action) => {
       state.Play = action.payload;
     },
+    SET_PLAYER_OWNER: (state, action) => {
+      state.PlayerOwner = action.payload;
+    },
   },
 });
 
-export const { SET_LOADING, SET_ERROR, SET_PLAY } = otherSlice.actions;
+export const { SET_LOADING, SET_ERROR, SET_PLAY, SET_PLAYER_OWNER } =
+  otherSlice.actions;
 
 export default otherSlice.reducer;

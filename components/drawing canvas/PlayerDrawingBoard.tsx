@@ -1,11 +1,10 @@
-"use client";
-import React, { useState } from "react";
-import Canvas from "../../components/drawing canvas/Canvas";
+import React from "react";
+import DrawingBoard from "../../components/drawing canvas/Canvas";
 
 const PlayerDrawingBoard = () => {
   return (
     <>
-      <Canvas />
+      <DrawingBoard />
     </>
   );
 };

@@ -1,6 +1,11 @@
 import { AppDispatch } from "../store";
 import { SET_GAME_SETTING } from "../features/game/gameSetting";
-import { SET_ERROR, SET_LOADING, SET_PLAY } from "../features/other/otherSlice";
+import {
+  SET_ERROR,
+  SET_LOADING,
+  SET_PLAY,
+  SET_PLAYER_OWNER,
+} from "../features/other/otherSlice";
 import {
   SET_AVATAR,
   SET_GAME_MESSAGE,
@@ -28,6 +33,12 @@ interface avatar {
   mouth: number;
 }
 
+interface Player {
+  name: string;
+  socketId: string;
+  avatar: [number, number, number];
+}
+
 export const setGameSetting =
   (gameSetting: PlayerSetting) => (dispatch: AppDispatch) => {
     dispatch(SET_GAME_SETTING(gameSetting));
@@ -47,7 +58,7 @@ export const setGameMessage =
   };
 
 export const setGamePlayers =
-  (playerList: string[]) => (dispatch: AppDispatch) => {
+  (playerList: Player[]) => (dispatch: AppDispatch) => {
     dispatch(SET_GAME_PLAYERS(playerList));
   };
 
@@ -57,4 +68,8 @@ export const setAvatar = (avatar: avatar) => (dispatch: AppDispatch) => {
 
 export const setPlay = (confirm: boolean) => (dispatch: AppDispatch) => {
   dispatch(SET_PLAY(confirm));
+};
+
+export const setRoomOwner = (confirm: boolean) => (dispatch: AppDispatch) => {
+  dispatch(SET_PLAYER_OWNER(confirm));
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -15,14 +15,23 @@ import {
   setGamePlayers,
   setLoading,
   setPlay,
+  setRoomOwner,
 } from "../redux/actions/allActions";
 import Tippy from "@tippyjs/react";
 import "tippy.js/animations/scale-subtle.css";
 import "tippy.js/dist/tippy.css";
+import GenerateAvatar from "../utils/GenerateAvatar";
+import InviteModal from "../utils/InviteModal";
 
 interface Message {
   text: string;
   color: string;
+}
+
+interface Player {
+  name: string;
+  socketId: string;
+  avatar: [number, number, number];
 }
 
 export default function PrivateRoomLayout({
@@ -30,7 +39,9 @@ export default function PrivateRoomLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [playerName, setPlayerName] = useState<string | null>(null);
+  // const playerName = sessionStorage.getItem("playerName");
 
   const messages = useAppSelector((state) => state.game?.messages);
   const players = useAppSelector((state) => state.game?.players);
@@ -40,7 +51,6 @@ export default function PrivateRoomLayout({
 
   const socket = getSocket();
 
-  const playerName = useMemo(() => sessionStorage.getItem("playerName"), []);
   const { roomid } = useParams();
 
   const searchParams = useSearchParams();
@@ -50,14 +60,22 @@ export default function PrivateRoomLayout({
 
   const onConnect = () => {
     setIsConnected(true);
-    socket.emit("player:connected", { name: playerName, roomid });
+    const eye = sessionStorage.getItem("avatarEye");
+    const mouth = sessionStorage.getItem("avatarMouth");
+    const face = sessionStorage.getItem("avatarFace");
+
+    const avatar = [eye, mouth, face];
+
+    if (eye && mouth && face) {
+      socket.emit("player:connected", { name: playerName, roomid, avatar });
+    }
   };
 
   const onPlayerListUpdate = ({
     playerList,
     messages,
   }: {
-    playerList: string[];
+    playerList: Player[];
     messages: Message[];
   }) => {
     // setPlayers(playerList);
@@ -67,16 +85,23 @@ export default function PrivateRoomLayout({
     // setMessages((prev) => [...prev, ...messages]);
   };
 
-  const onMessageBroadcast = (newMessages: Message[]) => {
-    // setMessages(newMessages);
-    dispatch(setGameMessage(newMessages));
+  const onMessageBroadcast = (newMessages: string) => {
+    dispatch((dispatch, getState) => {
+      const currentMessages = getState().game.messages; // Access current messages from Redux state
+      dispatch(
+        setGameMessage([
+          ...currentMessages,
+          { text: newMessages, color: "#FFF100" },
+        ])
+      );
+    });
   };
 
   const onPlayerDisconnect = ({
     playerList,
     messages,
   }: {
-    playerList: string[];
+    playerList: Player[];
     messages: Message[];
   }) => {
     dispatch(setGamePlayers(playerList));
@@ -89,9 +114,13 @@ export default function PrivateRoomLayout({
 
   useEffect(() => {
     dispatch(setLoading(false));
-    const eye = sessionStorage.getItem("avatarEye") || 0;
-    const mouth = sessionStorage.getItem("avatarMouth") || 0;
-    const face = sessionStorage.getItem("avatarFace") || 0;
+
+    const playerName = sessionStorage.getItem("playerName");
+    setPlayerName(playerName);
+
+    const eye = sessionStorage.getItem("avatarEye");
+    const mouth = sessionStorage.getItem("avatarMouth");
+    const face = sessionStorage.getItem("avatarFace");
 
     if (eye && mouth && face) {
       dispatch(
@@ -107,14 +136,14 @@ export default function PrivateRoomLayout({
   }, []);
 
   useEffect(() => {
-    if (!playerName) {
-      let pageUrl = window.location.origin;
-      if (inviteRoomid) {
-        pageUrl += "/?" + inviteRoomid;
-      }
-      router.push(pageUrl);
-      return;
-    }
+    // if (!playerName) {
+    //   let pageUrl = window.location.origin;
+    //   if (inviteRoomid) {
+    //     pageUrl += "/?" + inviteRoomid;
+    //   }
+    //   router.push(pageUrl);
+    //   return;
+    // }
 
     if (socket) {
       if (socket.connected) {
@@ -163,13 +192,19 @@ export default function PrivateRoomLayout({
         </Link>
         <div className="flex justify-between items-center bg-white text-black p-[3px]">
           <div className="flex gap-1 items-center">
-            <Image
-              src="/gif/clock.gif"
-              alt="clock image"
-              unoptimized
-              height={50}
-              width={50}
-            />
+            <div className="relative">
+              <Image
+                src="/gif/clock.gif"
+                alt="clock image"
+                unoptimized
+                height={50}
+                width={50}
+                className="scale-[1.2]"
+              />
+              <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[42%] text-xl font-medium">
+                0
+              </p>
+            </div>
             <p>ROUND 1 OF {rounds}</p>
           </div>
           <p className="font-semibold">Waiting</p>
@@ -192,7 +227,7 @@ export default function PrivateRoomLayout({
         </div>
         <div className="flex gap-2 justify-between w-full">
           <div className="w-[17%]">
-            <PlayerBoard players={players} />
+            <PlayerBoard players={players} socketId={socket.id} />
           </div>
           <div className="w-[63%]">{children}</div>
           <div className="w-[20%]">
@@ -205,107 +240,82 @@ export default function PrivateRoomLayout({
 }
 
 interface PlayerBoardProps {
-  players?: string[];
+  players?: Player[]; // Updated to expect Player objects
+  socketId: string | undefined;
 }
 
-const PlayerBoard: React.FC<PlayerBoardProps> = ({ players }) => {
-  const { face, eye, mouth } = useAppSelector((state) => state.game?.avatar);
-  // console.log(face, eye, mouth);
+const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
+  const [inviteModal, setInviteModal] = useState<boolean>(false);
 
-  const facesPerRow = 10,
-    totalFaces = 28,
-    faceWidth = 120,
-    faceHeight = 120;
+  const dispatch = useAppDispatch();
+  const avatar = useAppSelector((state) => state.game.avatar);
 
-  const eyesPerRow = 10,
-    totalEyes = 61,
-    eyeWidth = 100,
-    eyeHeight = 101;
-
-  const mouthsPerRow = 10,
-    totalMouths = 67,
-    mouthWidth = 100,
-    mouthHeight = 101;
-
-  const calculateBackgroundPosition = (
-    index: number,
-    itemsPerRow: number,
-    width: number,
-    height: number
-  ) => {
-    const row = Math.floor(index / itemsPerRow);
-    const col = index % itemsPerRow;
-    return { backgroundPosition: `-${col * width}px -${row * height}px` };
-  };
   return (
     <>
+      {/* {inviteModal && (
+        <div className="absolute inset-0  flex items-center justify-center">
+          <div className="bg-black opacity-40 absolute inset-0"></div>
+          <InviteModal
+            avatar={avatar}
+            name={players?.find((player) => player.socketId === socketId)?.name}
+            setInviteModal={setInviteModal}
+            key={socketId}
+          />
+        </div>
+      )} */}
       {players && players.length > 0 ? (
-        players.map((name, index) => (
-          <div
-            key={index}
-            className="pl-2 my-1 gap-3 text-sm text-black bg-white rounded-md border border-black flex justify-between items-center h-[68px]"
-          >
-            <div>
-              <p className="font-bold">#{index + 1}</p>
-              {index === 0 && (
-                <p>
-                  <Image
-                    src="/gif/owner.gif"
-                    alt="crown"
-                    height={20}
-                    width={20}
-                  />
-                </p>
-              )}
-            </div>
-            <div className="flex justify-center flex-col">
-              {name}
-              <p className="whitespace-nowrap">0 points</p>
-            </div>
-            {/* <div>user character</div> */}
-            <div className="w-[120px] h-[120px] overflow-hidden mx-auto relative   scale-[.6] items-center">
+        players.map((player, index) => {
+          const isOwner = socketId === players[0]?.socketId;
+          dispatch(setRoomOwner(isOwner));
+
+          const isCurrentPlayer = player.socketId === socketId;
+
+          return (
+            <div
+              key={index}
+              className="pl-2 my-1 gap-3 text-sm text-black bg-white rounded-md border border-black flex justify-between items-center h-[68px]"
+            >
+              <div>
+                <p className="font-bold">#{index + 1}</p>
+                {isOwner && (
+                  <p>
+                    <Image
+                      src="/gif/owner.gif"
+                      alt="crown"
+                      height={20}
+                      width={20}
+                      unoptimized
+                    />
+                  </p>
+                )}
+              </div>
+              <div className="flex justify-center flex-col">
+                <div className="flex">
+                  {player.name}
+                  <p className="ml-1">{isCurrentPlayer && "(You)"}</p>
+                </div>
+                <p className="whitespace-nowrap">0 points</p>
+              </div>
               <div
-                className="w-full h-full bg-no-repeat absolute"
-                style={{
-                  backgroundImage: "url(/gif/color_atlas.gif)",
-                  backgroundSize: `${faceWidth * facesPerRow}px auto`,
-                  ...calculateBackgroundPosition(
-                    face,
-                    facesPerRow,
-                    faceWidth,
-                    faceHeight
-                  ),
-                }}
-              ></div>
-              <div
-                className="w-[100px] h-[80px] bg-no-repeat absolute top-[10%] left-[6%]"
-                style={{
-                  backgroundImage: "url(/gif/eyes_atlas.gif)",
-                  backgroundSize: `${eyeWidth * eyesPerRow}px auto`,
-                  ...calculateBackgroundPosition(
-                    eye,
-                    eyesPerRow,
-                    eyeWidth,
-                    eyeHeight
-                  ),
-                }}
-              ></div>
-              <div
-                className="w-[100px] h-[80px] bg-no-repeat absolute bottom-[22%] left-[8%]"
-                style={{
-                  backgroundImage: "url(/gif/mouth_atlas.gif)",
-                  backgroundSize: `${mouthWidth * mouthsPerRow}px auto`,
-                  ...calculateBackgroundPosition(
-                    mouth,
-                    mouthsPerRow,
-                    mouthWidth,
-                    mouthHeight
-                  ),
-                }}
-              ></div>
+                onClick={
+                  isCurrentPlayer ? () => setInviteModal(true) : undefined
+                }
+                className={`w-[120px] h-[120px] overflow-hidden mx-auto relative scale-[.6] items-center ${
+                  isCurrentPlayer
+                    ? "cursor-pointer hover:scale-[.7] transition-all duration-500 ease-out"
+                    : ""
+                }`}
+              >
+                <GenerateAvatar
+                  key={player.socketId}
+                  eye={player?.avatar?.[0]}
+                  face={player?.avatar?.[2]}
+                  mouth={player?.avatar?.[1]}
+                />
+              </div>
             </div>
-          </div>
-        ))
+          );
+        })
       ) : (
         <div className="p-2 text-sm text-black bg-white rounded-md">
           No players online
