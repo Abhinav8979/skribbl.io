@@ -1,15 +1,21 @@
 import { AppDispatch } from "../store";
 import { SET_GAME_SETTING } from "../features/game/gameSetting";
 import {
+  SET_CHOOSE_WORD,
   SET_ERROR,
+  SET_IS_PLAYER_TURN,
   SET_LOADING,
   SET_PLAY,
+  SET_PLAYER_INDEX,
   SET_PLAYER_OWNER,
+  SET_SHOW_SCORE,
 } from "../features/other/otherSlice";
 import {
   SET_AVATAR,
   SET_GAME_MESSAGE,
   SET_GAME_PLAYERS,
+  SET_NEXT_ROUND,
+  SET_WORD,
 } from "../features/game/game";
 
 interface PlayerSetting {
@@ -72,4 +78,29 @@ export const setPlay = (confirm: boolean) => (dispatch: AppDispatch) => {
 
 export const setRoomOwner = (confirm: boolean) => (dispatch: AppDispatch) => {
   dispatch(SET_PLAYER_OWNER(confirm));
+};
+
+export const setIsPlayerChoosingWord =
+  (word: Boolean) => (dispatch: AppDispatch) => {
+    dispatch(SET_CHOOSE_WORD(word));
+  };
+
+export const setWord = (word: string) => (dispatch: AppDispatch) => {
+  dispatch(SET_WORD(word));
+};
+
+export const setPlayerIndex = (index: number) => (dispatch: AppDispatch) => {
+  dispatch(SET_PLAYER_INDEX(index));
+};
+
+export const setIsPlayerTURN = (index: boolean) => (dispatch: AppDispatch) => {
+  dispatch(SET_IS_PLAYER_TURN(index));
+};
+
+export const setNextRound = (index: number) => (dispatch: AppDispatch) => {
+  dispatch(SET_NEXT_ROUND(index));
+};
+
+export const showScore = (score: Boolean) => (dispatch: AppDispatch) => {
+  dispatch(SET_SHOW_SCORE(score));
 };

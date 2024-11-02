@@ -1,3 +1,5 @@
+import { words } from "./skribblWords";
+
 export function generateRoomID(length = 8): string {
   const characters =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -7,4 +9,22 @@ export function generateRoomID(length = 8): string {
     roomID += characters[randomIndex];
   }
   return roomID;
+}
+
+export function generateRandomWords() {
+  const lengths = Object.keys(words)
+    .map(Number)
+    .filter((length) => length >= 3 && length <= 19);
+
+  const randomWords: string[] = [];
+
+  for (let i = 0; i < 3; i++) {
+    const randomLength = lengths[Math.floor(Math.random() * lengths.length)];
+    const wordGroup = words[randomLength.toString()];
+
+    const randomWord = wordGroup[Math.floor(Math.random() * wordGroup.length)];
+    randomWords.push(randomWord);
+  }
+
+  return randomWords;
 }

@@ -116,7 +116,7 @@ app.prepare().then(() => {
 
         const playerList = (player.get(roomid) || []).map((p) => p.name);
 
-        roomMessages[roomid].push({
+        roomMessages[roomid]?.push({
           text: `${playerData.name} left the room`,
           color: "red",
         });

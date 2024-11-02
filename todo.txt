@@ -3,3 +3,4 @@ TO DO:
 
 1.On clicking the play button the player will join any random game if invteRoomId is not there
 2. Invite Modal when we click on the chracter
+3. Problem in sending chat message 

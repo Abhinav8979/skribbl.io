@@ -1,9 +1,12 @@
-import React, { useRef, useState, useEffect } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { Stage, Layer, Line, Rect } from "react-konva";
 import { getSocket } from "../../app/socket";
 import { useParams } from "next/navigation";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
+import { useAppSelector } from "../../redux/hooks";
 
 const DrawingBoard: React.FC = () => {
   const [tool, setTool] = useState<"brush" | "eraser">("brush");
@@ -14,6 +17,8 @@ const DrawingBoard: React.FC = () => {
 
   const socket = getSocket();
   const { roomid } = useParams();
+
+  const isPlayerTurn = useAppSelector((state) => state.other.isPlayerTurn);
 
   const colors = [
     "#000000",
@@ -109,7 +114,7 @@ const DrawingBoard: React.FC = () => {
   return (
     <div className="flex flex-col w-full">
       <Stage
-        width={800}
+        width={810}
         height={565}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -117,7 +122,7 @@ const DrawingBoard: React.FC = () => {
       >
         {/* Background Layer */}
         <Layer>
-          <Rect width={800} height={600} fill="white" />
+          <Rect width={830} height={600} fill="white" />
         </Layer>
 
         {/* Drawing Layer */}
@@ -138,99 +143,101 @@ const DrawingBoard: React.FC = () => {
         </Layer>
       </Stage>
 
-      <div className="flex gap-2 justify-between items-center mt-2">
-        <div className="flex flex-wrap w-[300px]">
-          {colors.map((color) => (
-            <button
-              key={color}
-              onClick={() => setStrokeColor(color)}
-              style={{
-                backgroundColor: color,
-                width: "24px",
-                height: "24px",
-                cursor: "pointer",
-              }}
-            />
-          ))}
-        </div>
-        <div className="flex items-center justify-between bg-white text-black p-[3px] rounded-custom">
-          <label className="mr-2 font-semibold">Stroke Width:</label>
-          <select
-            className="border rounded-md p-1 bg-white text-black"
-            value={strokeWidth}
-            onChange={handleStrokeWidthChange}
-          >
-            {[1, 3, 5, 7].map((width) => (
-              <option key={width} value={width}>
-                {width}
-              </option>
+      {isPlayerTurn && (
+        <div className="flex gap-2 justify-between items-center mt-2">
+          <div className="flex flex-wrap w-[300px]">
+            {colors.map((color) => (
+              <button
+                key={color}
+                onClick={() => setStrokeColor(color)}
+                style={{
+                  backgroundColor: color,
+                  width: "24px",
+                  height: "24px",
+                  cursor: "pointer",
+                }}
+              />
             ))}
-          </select>
-        </div>
+          </div>
+          <div className="flex items-center justify-between bg-white text-black p-[3px] rounded-custom">
+            <label className="mr-2 font-semibold">Stroke Width:</label>
+            <select
+              className="border rounded-md p-1 bg-white text-black"
+              value={strokeWidth}
+              onChange={handleStrokeWidthChange}
+            >
+              {[1, 3, 5, 7].map((width) => (
+                <option key={width} value={width}>
+                  {width}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex gap-1">
-          <Tippy content="Brush">
-            <div
-              className={`rounded-custom flex items-center justify-center ${
-                tool === "brush" ? "bg-purple-500" : "bg-white"
-              } transition-transform transform active:scale-90`}
-            >
-              <button
-                onClick={() => handleToolClick("brush")}
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  background: "url(/gif/pen.gif)",
-                  backgroundSize: "contain",
-                }}
-              />
-            </div>
-          </Tippy>
-          <Tippy content="Eraser">
-            <div
-              className={`rounded-custom flex items-center justify-center ${
-                tool === "eraser" ? "bg-purple-500" : "bg-white"
-              } transition-transform transform active:scale-90`}
-            >
-              <button
-                onClick={toggleEraseMode}
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  background: "url(/gif/eraser.gif)",
-                  backgroundSize: "contain",
-                }}
-              />
-            </div>
-          </Tippy>
-          <Tippy content="Clear Canvas">
-            <div className="bg-white rounded-custom flex items-center justify-center transition-transform transform active:scale-90">
-              <button
-                onClick={handleClearCanvas}
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  background: "url(/gif/clear.gif)",
-                  backgroundSize: "contain",
-                }}
-              />
-            </div>
-          </Tippy>
-          <Tippy content="Undo">
-            <div className="bg-white rounded-custom flex items-center justify-center transition-transform transform active:scale-90">
-              <button
-                onClick={handleUndo}
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  background: "url(/gif/undo.gif)",
-                  backgroundSize: "contain",
-                }}
-              />
-            </div>
-          </Tippy>
+          <div className="flex gap-1">
+            <Tippy content="Brush">
+              <div
+                className={`rounded-custom flex items-center justify-center ${
+                  tool === "brush" ? "bg-purple-500" : "bg-white"
+                } transition-transform transform active:scale-90`}
+              >
+                <button
+                  onClick={() => handleToolClick("brush")}
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    background: "url(/gif/pen.gif)",
+                    backgroundSize: "contain",
+                  }}
+                />
+              </div>
+            </Tippy>
+            <Tippy content="Eraser">
+              <div
+                className={`rounded-custom flex items-center justify-center ${
+                  tool === "eraser" ? "bg-purple-500" : "bg-white"
+                } transition-transform transform active:scale-90`}
+              >
+                <button
+                  onClick={toggleEraseMode}
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    background: "url(/gif/eraser.gif)",
+                    backgroundSize: "contain",
+                  }}
+                />
+              </div>
+            </Tippy>
+            <Tippy content="Clear Canvas">
+              <div className="bg-white rounded-custom flex items-center justify-center transition-transform transform active:scale-90">
+                <button
+                  onClick={handleClearCanvas}
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    background: "url(/gif/clear.gif)",
+                    backgroundSize: "contain",
+                  }}
+                />
+              </div>
+            </Tippy>
+            <Tippy content="Undo">
+              <div className="bg-white rounded-custom flex items-center justify-center transition-transform transform active:scale-90">
+                <button
+                  onClick={handleUndo}
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    background: "url(/gif/undo.gif)",
+                    backgroundSize: "contain",
+                  }}
+                />
+              </div>
+            </Tippy>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

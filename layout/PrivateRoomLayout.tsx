@@ -13,15 +13,22 @@ import {
   setAvatar,
   setGameMessage,
   setGamePlayers,
+  setIsPlayerChoosingWord,
+  setIsPlayerTURN,
   setLoading,
+  setNextRound,
   setPlay,
+  setPlayerIndex,
   setRoomOwner,
+  setWord,
+  showScore,
 } from "../redux/actions/allActions";
 import Tippy from "@tippyjs/react";
 import "tippy.js/animations/scale-subtle.css";
 import "tippy.js/dist/tippy.css";
 import GenerateAvatar from "../utils/GenerateAvatar";
 import InviteModal from "../utils/InviteModal";
+import Timer from "../utils/Timer";
 
 interface Message {
   text: string;
@@ -48,6 +55,10 @@ export default function PrivateRoomLayout({
 
   const router = useRouter();
   const rounds = useAppSelector((state) => state.gameSetting.rounds);
+  const word = useAppSelector((state) => state.game?.word);
+  const currentRound = useAppSelector((state) => state.game.currentRound);
+  const gameSetting = useAppSelector((state) => state.gameSetting);
+  const totalPlayers = useAppSelector((state) => state.gameSetting.Players);
 
   const socket = getSocket();
 
@@ -108,8 +119,27 @@ export default function PrivateRoomLayout({
     dispatch(setGameMessage(messages));
   };
 
-  const onGameStart = (kk: boolean) => {
-    dispatch(setPlay(kk));
+  const onGameStart = (confirm: boolean) => {
+    dispatch(setPlay(confirm));
+  };
+
+  const handleTimeUp = () => {
+    dispatch(setWord(""));
+    dispatch(setIsPlayerTURN(false));
+    dispatch(setIsPlayerChoosingWord(true));
+    dispatch((dispatch, getState) => {
+      let index = getState.other.playerIndex;
+
+      if (index + 1 >= totalPlayers) {
+        index = 1;
+        dispatch((dispatch, getState) => {
+          dispatch(setNextRound(getState.nextRound + 1));
+        });
+      }
+
+      dispatch(setPlayerIndex(index + 1));
+      dispatch(showScore(true));
+    });
   };
 
   useEffect(() => {
@@ -202,12 +232,31 @@ export default function PrivateRoomLayout({
                 className="scale-[1.2]"
               />
               <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[42%] text-xl font-medium">
-                0
+                {word && word.length > 0 && (
+                  <Timer onTimeUp={handleTimeUp} startTime={4} />
+                )}
               </p>
             </div>
-            <p>ROUND 1 OF {rounds}</p>
+            <p>
+              ROUND {currentRound} OF {rounds}
+            </p>
           </div>
-          <p className="font-semibold">Waiting</p>
+          <div>
+            {word && word.length > 0 ? (
+              <div className="flex items-center flex-col">
+                <p className="font-medium">Guess Word</p>
+                <p>
+                  {word.split("").map((char, index) => (
+                    <span className="mx-1 font-semibold" key={index}>
+                      {char === " " ? " " : "_"}
+                    </span>
+                  ))}
+                </p>
+              </div>
+            ) : (
+              <p className="font-semibold">Waiting</p>
+            )}
+          </div>
           <div className="cursor-pointer">
             <Tippy
               content="Setting"
@@ -249,6 +298,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
 
   const dispatch = useAppDispatch();
   const avatar = useAppSelector((state) => state.game.avatar);
+  const playerIndex = useAppSelector((state) => state.other.playerIndex);
 
   return (
     <>
@@ -296,6 +346,17 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
                 </div>
                 <p className="whitespace-nowrap">0 points</p>
               </div>
+              {player.socketId === player[playerIndex]?.socketId && (
+                <div>
+                  <Image
+                    width={70}
+                    height={70}
+                    alt="bursh"
+                    src="/gif/how.gif"
+                    unoptimized
+                  />
+                </div>
+              )}
               <div
                 onClick={
                   isCurrentPlayer ? () => setInviteModal(true) : undefined
@@ -307,7 +368,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
                 }`}
               >
                 <GenerateAvatar
-                  key={player.socketId}
+                  key={player?.socketId}
                   eye={player?.avatar?.[0]}
                   face={player?.avatar?.[2]}
                   mouth={player?.avatar?.[1]}
@@ -351,19 +412,26 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
   }, [message]);
 
   return (
-    <div className="p-2 text-sm text-black bg-white gap-12 h-[75vh] flex flex-col justify-end rounded-md border border-black">
+    <div className="text-sm text-black bg-white gap-12 h-[75vh] flex flex-col justify-end rounded-md ">
       <div className="h-72 overflow-y-scroll flex flex-col gap-2 mb-4">
         <div className="align-text-bottom font-medium capitalize flex gap-1 flex-col">
           {message &&
             message.map((msg, index) => (
-              <p key={index}>
+              <p
+                key={index}
+                className={
+                  index % 2 === 0
+                    ? "bg-black bg-opacity-60 p-1"
+                    : "bg-white p-1"
+                }
+              >
                 <span style={{ color: msg.color }}>{msg.text}</span>
               </p>
             ))}
           <div ref={messageEndRef} />
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 p-2">
         <input
           type="text"
           name="chat-box"

@@ -8,7 +8,11 @@ const initialState = {
     eye: 0,
     mouth: 0,
   },
+  score: 0,
+  word: "",
+  currentRound: 1,
 };
+
 interface Message {
   text: string;
   color: string;
@@ -20,11 +24,6 @@ interface State {
 interface SetGameMessageAction {
   type: string;
   payload: Message[];
-}
-interface Player {
-  name: string;
-  socketId: string;
-  avatar: [number, number, number];
 }
 
 const gameInformationSlice = createSlice({
@@ -41,10 +40,22 @@ const gameInformationSlice = createSlice({
       const { face, eye, mouth } = action.payload;
       state.avatar = { face, eye, mouth };
     },
+    SET_WORD: (state, action) => {
+      state.word = action.payload;
+    },
+    SET_NEXT_ROUND: (state, action) => {
+      // will evaluate the score here
+      state.currentRound = action.payload;
+    },
   },
 });
 
-export const { SET_GAME_MESSAGE, SET_GAME_PLAYERS, SET_AVATAR } =
-  gameInformationSlice.actions;
+export const {
+  SET_GAME_MESSAGE,
+  SET_GAME_PLAYERS,
+  SET_AVATAR,
+  SET_WORD,
+  SET_NEXT_ROUND,
+} = gameInformationSlice.actions;
 
 export default gameInformationSlice.reducer;

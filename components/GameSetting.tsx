@@ -16,7 +16,6 @@ const GameSetting = () => {
   const { roomid } = useParams();
 
   const isOwner = useAppSelector((state) => state?.other?.PlayerOwner);
-  console.log(isOwner);
 
   interface Setting {
     name: string;
