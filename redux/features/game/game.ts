@@ -11,6 +11,8 @@ const initialState = {
   score: 0,
   word: "",
   currentRound: 1,
+  roomId: null,
+  NumberOfPlayerGuessed: 0,
 };
 
 interface Message {
@@ -30,6 +32,10 @@ const gameInformationSlice = createSlice({
   name: "gameSetting",
   initialState,
   reducers: {
+    SET_ROOM_ID: (state, action) => {
+      state.roomId = action.payload;
+    },
+
     SET_GAME_MESSAGE: (state: State, action: SetGameMessageAction) => {
       state.messages = [...action.payload];
     },
@@ -51,6 +57,7 @@ const gameInformationSlice = createSlice({
 });
 
 export const {
+  SET_ROOM_ID,
   SET_GAME_MESSAGE,
   SET_GAME_PLAYERS,
   SET_AVATAR,

@@ -3,18 +3,22 @@ import { SET_GAME_SETTING } from "../features/game/gameSetting";
 import {
   SET_CHOOSE_WORD,
   SET_ERROR,
+  SET_GAME_OVER,
+  SET_IS_DRAWING,
   SET_IS_PLAYER_TURN,
   SET_LOADING,
   SET_PLAY,
   SET_PLAYER_INDEX,
-  SET_PLAYER_OWNER,
+  SET_ROOM_OWNER,
   SET_SHOW_SCORE,
 } from "../features/other/otherSlice";
+
 import {
   SET_AVATAR,
   SET_GAME_MESSAGE,
   SET_GAME_PLAYERS,
   SET_NEXT_ROUND,
+  SET_ROOM_ID,
   SET_WORD,
 } from "../features/game/game";
 
@@ -45,6 +49,9 @@ interface Player {
   avatar: [number, number, number];
 }
 
+export const setRoomId = (state: number) => (dispatch: AppDispatch) => {
+  dispatch(SET_ROOM_ID(state));
+};
 export const setGameSetting =
   (gameSetting: PlayerSetting) => (dispatch: AppDispatch) => {
     dispatch(SET_GAME_SETTING(gameSetting));
@@ -77,7 +84,7 @@ export const setPlay = (confirm: boolean) => (dispatch: AppDispatch) => {
 };
 
 export const setRoomOwner = (confirm: boolean) => (dispatch: AppDispatch) => {
-  dispatch(SET_PLAYER_OWNER(confirm));
+  dispatch(SET_ROOM_OWNER(confirm));
 };
 
 export const setIsPlayerChoosingWord =
@@ -103,4 +110,12 @@ export const setNextRound = (index: number) => (dispatch: AppDispatch) => {
 
 export const showScore = (score: Boolean) => (dispatch: AppDispatch) => {
   dispatch(SET_SHOW_SCORE(score));
+};
+
+export const setIsDrawing = (payload: boolean) => (dispatch: AppDispatch) => {
+  dispatch(SET_IS_DRAWING(payload));
+};
+
+export const setGameOver = (payload: boolean) => (dispatch: AppDispatch) => {
+  dispatch(SET_GAME_OVER(payload));
 };

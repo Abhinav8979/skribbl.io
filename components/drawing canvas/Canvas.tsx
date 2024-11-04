@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Stage, Layer, Line, Rect } from "react-konva";
 import { getSocket } from "../../app/socket";
 import { useParams } from "next/navigation";
@@ -15,10 +15,14 @@ const DrawingBoard: React.FC = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [strokeWidth, setStrokeWidth] = useState(1);
 
+  const [dimensions, setDimensions] = useState({ width: 810, height: 565 });
+
+  const containerRef = useRef(null);
   const socket = getSocket();
   const { roomid } = useParams();
 
   const isPlayerTurn = useAppSelector((state) => state.other.isPlayerTurn);
+  const index = useAppSelector((state) => state.other.playerIndex);
 
   const colors = [
     "#000000",
@@ -48,6 +52,10 @@ const DrawingBoard: React.FC = () => {
   ];
 
   useEffect(() => {
+    setLines([]);
+  }, [index]);
+
+  useEffect(() => {
     socket.on("player:draw", (data) => {
       setLines((prevLines) => [...prevLines, data]);
     });
@@ -60,6 +68,28 @@ const DrawingBoard: React.FC = () => {
       socket.off("clear:canvas");
     };
   }, [socket]);
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const { offsetWidth, offsetHeight } = containerRef.current;
+        setDimensions({
+          width: offsetWidth,
+          height: offsetHeight,
+        });
+      } else {
+        setDimensions({
+          width: window.innerWidth * 0.8,
+          height: window.innerHeight * 0.7,
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener("resize", updateDimensions);
+
+    return () => window.removeEventListener("resize", updateDimensions);
+  }, []);
 
   const handleMouseDown = (e: any) => {
     const pos = e.target.getStage().getPointerPosition();
@@ -113,35 +143,39 @@ const DrawingBoard: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full">
-      <Stage
-        width={810}
-        height={565}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-      >
-        {/* Background Layer */}
-        <Layer>
-          <Rect width={830} height={600} fill="white" />
-        </Layer>
-
-        {/* Drawing Layer */}
-        <Layer>
-          {lines.map((line, i) => (
-            <Line
-              key={i}
-              points={line.points}
-              stroke={line.tool === "eraser" ? "white" : line.color}
-              strokeWidth={line.strokeWidth}
-              lineCap="round"
-              lineJoin="round"
-              globalCompositeOperation={
-                line.tool === "eraser" ? "destination-out" : "source-over"
-              }
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
+        <Stage
+          width={dimensions.width}
+          height={dimensions.height}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+        >
+          <Layer>
+            <Rect
+              width={dimensions.width}
+              height={dimensions.height}
+              fill="white"
             />
-          ))}
-        </Layer>
-      </Stage>
+          </Layer>
+
+          <Layer>
+            {lines.map((line, i) => (
+              <Line
+                key={i}
+                points={line.points}
+                stroke={line.tool === "eraser" ? "white" : line.color}
+                strokeWidth={line.strokeWidth}
+                lineCap="round"
+                lineJoin="round"
+                globalCompositeOperation={
+                  line.tool === "eraser" ? "destination-out" : "source-over"
+                }
+              />
+            ))}
+          </Layer>
+        </Stage>
+      </div>
 
       {isPlayerTurn && (
         <div className="flex gap-2 justify-between items-center mt-2">

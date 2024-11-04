@@ -28,11 +28,7 @@ const Timer = ({ startTime, onTimeUp }: Timer) => {
     return `${String(seconds)}`;
   };
 
-  return (
-    <div>
-      <h1>{formatTime(time)}</h1>
-    </div>
-  );
+  return <>{formatTime(time)}</>;
 };
 
 export default Timer;

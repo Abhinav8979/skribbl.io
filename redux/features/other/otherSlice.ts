@@ -2,14 +2,15 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   isLoading: false,
-  // isPrivateRoom: false,
   isError: false,
   Play: false,
-  PlayerOwner: false,
+  roomOwner: false,
   isPlayerchoosingWord: false,
   playerIndex: 0,
   isPlayerTurn: false,
   showScore: false,
+  isDrawing: false,
+  gameOver: false,
 };
 
 const otherSlice = createSlice({
@@ -29,8 +30,8 @@ const otherSlice = createSlice({
     },
 
     // TO SEE WHO IS THE OWNER OF THE ROOM
-    SET_PLAYER_OWNER: (state, action) => {
-      state.PlayerOwner = action.payload;
+    SET_ROOM_OWNER: (state, action) => {
+      state.roomOwner = action.payload;
     },
 
     // TO DISPLAY TO ALL PLAYERS THAT WORD IS BEEN CHOOSEN
@@ -52,6 +53,12 @@ const otherSlice = createSlice({
     SET_SHOW_SCORE: (state, action) => {
       state.showScore = action.payload;
     },
+    SET_IS_DRAWING: (state, action) => {
+      state.isDrawing = action.payload;
+    },
+    SET_GAME_OVER: (state, action) => {
+      state.gameOver = action.payload;
+    },
   },
 });
 
@@ -59,11 +66,13 @@ export const {
   SET_LOADING,
   SET_ERROR,
   SET_PLAY,
-  SET_PLAYER_OWNER,
+  SET_ROOM_OWNER,
   SET_CHOOSE_WORD,
   SET_PLAYER_INDEX,
   SET_IS_PLAYER_TURN,
   SET_SHOW_SCORE,
+  SET_IS_DRAWING,
+  SET_GAME_OVER,
 } = otherSlice.actions;
 
 export default otherSlice.reducer;

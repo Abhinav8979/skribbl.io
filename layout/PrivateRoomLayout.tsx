@@ -12,6 +12,7 @@ import { getSocket } from "../app/socket";
 import {
   setAvatar,
   setGameMessage,
+  setGameOver,
   setGamePlayers,
   setIsPlayerChoosingWord,
   setIsPlayerTURN,
@@ -20,6 +21,7 @@ import {
   setPlay,
   setPlayerIndex,
   setRoomOwner,
+  setRoomStatus,
   setWord,
   showScore,
 } from "../redux/actions/allActions";
@@ -29,6 +31,8 @@ import "tippy.js/dist/tippy.css";
 import GenerateAvatar from "../utils/GenerateAvatar";
 import InviteModal from "../utils/InviteModal";
 import Timer from "../utils/Timer";
+import RevealString from "../utils/RevealText";
+import { levenshteinDistance } from "../utils/gameFunctions";
 
 interface Message {
   text: string;
@@ -54,10 +58,13 @@ export default function PrivateRoomLayout({
   const players = useAppSelector((state) => state.game?.players);
 
   const router = useRouter();
-  const rounds = useAppSelector((state) => state.gameSetting.rounds);
+  // const rounds = useAppSelector((state) => state.gameSetting.rounds);
   const word = useAppSelector((state) => state.game?.word);
   const currentRound = useAppSelector((state) => state.game.currentRound);
-  const gameSetting = useAppSelector((state) => state.gameSetting);
+  const totalRounds = useAppSelector((state) => state.gameSetting.rounds);
+  const hints = useAppSelector((state) => state.gameSetting.hints);
+  const currentPlayerIndex = useAppSelector((state) => state.other.playerIndex);
+  const playerTurn = useAppSelector((state) => state.other.isPlayerTurn);
   const totalPlayers = useAppSelector((state) => state.gameSetting.Players);
 
   const socket = getSocket();
@@ -78,7 +85,17 @@ export default function PrivateRoomLayout({
     const avatar = [eye, mouth, face];
 
     if (eye && mouth && face) {
-      socket.emit("player:connected", { name: playerName, roomid, avatar });
+      if (players.length === totalPlayers) {
+        alert("Game is full, please join another game.");
+        router.push("/");
+        return;
+      }
+      socket.emit("player:connected", {
+        name: playerName,
+        roomid,
+        avatar,
+        totalPlayers,
+      });
     }
   };
 
@@ -96,16 +113,18 @@ export default function PrivateRoomLayout({
     // setMessages((prev) => [...prev, ...messages]);
   };
 
-  const onMessageBroadcast = (newMessages: string) => {
+  const onMessageBroadcast = (newMessages: Message) => {
     dispatch((dispatch, getState) => {
-      const currentMessages = getState().game.messages; // Access current messages from Redux state
-      dispatch(
-        setGameMessage([
-          ...currentMessages,
-          { text: newMessages, color: "#FFF100" },
-        ])
-      );
+      const currentMessages = getState().game.messages;
+      dispatch(setGameMessage([...currentMessages, newMessages]));
     });
+  };
+
+  const onGameWord = (word: string) => {
+    dispatch(setWord(word));
+    dispatch(setIsPlayerChoosingWord(false));
+    // dispatch(setIsPlayerTURN(true));
+    // dispatch(showScore(false));
   };
 
   const onPlayerDisconnect = ({
@@ -125,20 +144,28 @@ export default function PrivateRoomLayout({
 
   const handleTimeUp = () => {
     dispatch(setWord(""));
-    dispatch(setIsPlayerTURN(false));
-    dispatch(setIsPlayerChoosingWord(true));
+    // dispatch(setIsPlayerTURN(false));
+    // dispatch(setIsPlayerChoosingWord(true));
+    let index;
     dispatch((dispatch, getState) => {
-      let index = getState.other.playerIndex;
+      index = getState().other.playerIndex;
 
-      if (index + 1 >= totalPlayers) {
-        index = 1;
+      if (index + 1 > players.length) {
+        index = 0;
         dispatch((dispatch, getState) => {
-          dispatch(setNextRound(getState.nextRound + 1));
+          const nextRound = getState().game.currentRound;
+          if (nextRound !== totalRounds) {
+            dispatch(setNextRound(nextRound + 1));
+            return;
+          } else {
+            // dispatch(gameOver(true);)
+            alert("game over");
+          }
         });
+      } else {
+        dispatch(setPlayerIndex(index + 1));
+        dispatch(showScore(true));
       }
-
-      dispatch(setPlayerIndex(index + 1));
-      dispatch(showScore(true));
     });
   };
 
@@ -166,6 +193,11 @@ export default function PrivateRoomLayout({
   }, []);
 
   useEffect(() => {
+    const isOwner = socket.id === players[0]?.socketId;
+    dispatch(setRoomOwner(isOwner));
+  }, [players]);
+
+  useEffect(() => {
     // if (!playerName) {
     //   let pageUrl = window.location.origin;
     //   if (inviteRoomid) {
@@ -188,6 +220,8 @@ export default function PrivateRoomLayout({
       socket.on("player:disconnect", onPlayerDisconnect);
       socket.on("copy:clipboard", onMessageBroadcast);
       socket.on("start", onGameStart);
+      socket.on("game:word", onGameWord);
+      // socket.on("game:nextPlayerIndex", onNextPlayerIndex);
 
       return () => {
         socket.off("connect", onConnect);
@@ -199,6 +233,23 @@ export default function PrivateRoomLayout({
       };
     }
   }, [socket, playerName, roomid, router]);
+
+  useEffect(() => {
+    if (currentPlayerIndex < players.length) {
+      const isCurrentPlayerChoosingWord =
+        players[currentPlayerIndex]?.socketId === socket.id;
+
+      dispatch(setIsPlayerChoosingWord(true));
+      dispatch(setIsPlayerTURN(isCurrentPlayerChoosingWord));
+    } else {
+      if (currentRound + 1 > totalRounds) {
+        dispatch(setGameOver(true));
+      } else {
+        dispatch(setNextRound(currentRound + 1));
+        dispatch(setPlayerIndex(0));
+      }
+    }
+  }, [socket, currentPlayerIndex, players]);
 
   if (!isConnected) {
     return <p>You are offline</p>;
@@ -218,6 +269,7 @@ export default function PrivateRoomLayout({
             width={320}
             priority
             unoptimized
+            style={{ width: "auto", height: "auto" }}
           />
         </Link>
         <div className="flex justify-between items-center bg-white text-black p-[3px]">
@@ -232,27 +284,23 @@ export default function PrivateRoomLayout({
                 className="scale-[1.2]"
               />
               <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[42%] text-xl font-medium">
-                {word && word.length > 0 && (
-                  <Timer onTimeUp={handleTimeUp} startTime={4} />
-                )}
+                {word && <Timer onTimeUp={handleTimeUp} startTime={20} />}
               </p>
             </div>
             <p>
-              ROUND {currentRound} OF {rounds}
+              ROUND {currentRound} OF {totalRounds}
             </p>
           </div>
           <div>
             {word && word.length > 0 ? (
-              <div className="flex items-center flex-col">
-                <p className="font-medium">Guess Word</p>
-                <p>
-                  {word.split("").map((char, index) => (
-                    <span className="mx-1 font-semibold" key={index}>
-                      {char === " " ? " " : "_"}
-                    </span>
-                  ))}
-                </p>
-              </div>
+              !playerTurn ? (
+                <div className="flex items-center flex-col">
+                  <p className="font-medium">Guess Word</p>
+                  <RevealString word={word} hint={hints} />
+                </div>
+              ) : (
+                word
+              )
             ) : (
               <p className="font-semibold">Waiting</p>
             )}
@@ -300,6 +348,10 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
   const avatar = useAppSelector((state) => state.game.avatar);
   const playerIndex = useAppSelector((state) => state.other.playerIndex);
 
+  const isPlayerTurn = useAppSelector((state) => state.other.isPlayerTurn);
+  const isOwner = useAppSelector((state) => state.other.PlayerOwner);
+  const isDrawing = useAppSelector((state) => state.other.isDrawing);
+
   return (
     <>
       {/* {inviteModal && (
@@ -315,9 +367,6 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
       )} */}
       {players && players.length > 0 ? (
         players.map((player, index) => {
-          const isOwner = socketId === players[0]?.socketId;
-          dispatch(setRoomOwner(isOwner));
-
           const isCurrentPlayer = player.socketId === socketId;
 
           return (
@@ -346,11 +395,11 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
                 </div>
                 <p className="whitespace-nowrap">0 points</p>
               </div>
-              {player.socketId === player[playerIndex]?.socketId && (
+              {isDrawing && (
                 <div>
                   <Image
-                    width={70}
-                    height={70}
+                    width={40}
+                    height={40}
                     alt="bursh"
                     src="/gif/how.gif"
                     unoptimized
@@ -395,10 +444,34 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
   const [playerMessage, setPlayerMessage] = useState("");
   const { roomid } = useParams();
   const messageEndRef = useRef<HTMLDivElement>(null);
+  const play = useAppSelector((state) => state.other.Play);
+  const word = useAppSelector((state) => state.game.word);
+  const dispatch = useAppDispatch();
 
   const handleSendRequest = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && playerMessage.trim()) {
-      socket?.emit("player:message-send", { playerMessage, roomid });
+      if (word && play && word.length === playerMessage.length) {
+        const distance = levenshteinDistance({ a: word, b: playerMessage });
+
+        if (distance === 0) {
+          const name = sessionStorage.getItem("playerName");
+          socket?.emit("player:guessed-word", { playerName: name, roomid });
+        } else if (distance === 1) {
+          dispatch((dispatch, getState) => {
+            const currentMessages = getState().game.messages;
+            dispatch(
+              setGameMessage([
+                ...currentMessages,
+                { text: "You are close!!", color: "#00FF9C" },
+              ])
+            );
+          });
+        } else {
+          socket?.emit("player:message-send", { playerMessage, roomid });
+        }
+      } else {
+        socket?.emit("player:message-send", { playerMessage, roomid });
+      }
       setPlayerMessage("");
     }
   };

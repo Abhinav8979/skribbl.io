@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { generateRoomID } from "../../utils/utils";
 import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setLoading } from "../../redux/actions/allActions";
+import { setLoading, setPlay } from "../../redux/actions/allActions";
 import Character from "./CharacterEdit";
 
 const Home = () => {
@@ -19,6 +19,7 @@ const Home = () => {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector((state) => state.other.isLoading);
   const avatar = useAppSelector((state) => state.game.avatar);
+  // const play = useAppSelector((state) => state.other.Play);
 
   const handleSave = () => {
     sessionStorage.setItem("playerName", name);
@@ -66,6 +67,10 @@ const Home = () => {
   };
 
   useEffect(() => {
+    dispatch(setPlay(false));
+  }, []);
+
+  useEffect(() => {
     dispatch(setLoading(false));
     const storedName = sessionStorage.getItem("playerName") || "";
     setName(storedName);
@@ -90,6 +95,7 @@ const Home = () => {
                 height={500}
                 width={500}
                 priority
+                style={{ width: "auto", height: "auto" }}
               />
             </Link>
           </div>

@@ -25,16 +25,17 @@ interface Message {
 
 let roomMessages: Record<string, Message[]> = {};
 
+let availableRoom: string[] = [];
+
 app.prepare().then(() => {
   const httpServer = createServer(handler);
   const io = new Server(httpServer);
 
   io.on("connection", (socket: Socket) => {
-    socket.on("player:connected", ({ name, roomid, avatar }) => {
+    socket.on("player:connected", ({ name, roomid, avatar, totalPlayers }) => {
       if (!roomMessages[roomid]) {
         roomMessages[roomid] = [];
       }
-      console.log(avatar);
 
       if (roomMessages[roomid].length === 0) {
         roomMessages[roomid].push({
@@ -59,6 +60,12 @@ app.prepare().then(() => {
 
       // const playerList = playersInRoom.map((p) => p.name);
 
+      if (totalPlayers === player.size + 1) {
+        availableRoom.filter((id) => id !== roomid);
+      } else {
+        availableRoom.push(roomid);
+      }
+
       socket.join(roomid);
       io.to(roomid).emit("playerList:update", {
         playerList: playersInRoom,
@@ -71,15 +78,34 @@ app.prepare().then(() => {
         const newMessage = { text: playerMessage, color: "#191919" };
         roomMessages[roomid].push(newMessage);
 
-        io.to(roomid).emit("playerMessage:broadcast", roomMessages[roomid]);
+        io.to(roomid).emit("playerMessage:broadcast", newMessage);
+      }
+    });
+
+    socket.on("player:guessed-word", ({ playerName, roomid }) => {
+      if (roomMessages[roomid]) {
+        const newMessage = {
+          text: `${playerName} guessed the word!`,
+          color: "green",
+        };
+        roomMessages[roomid].push(newMessage);
+
+        io.to(roomid).emit("playerMessage:broadcast", newMessage);
       }
     });
 
     socket.on("copy:clipboard", (roomid) => {
       if (roomid) {
         // roomMessages[roomid].push({ text: message, color: "#FFF100" });
-        socket.emit("copy:clipboard", "Copied room link to clipboard!");
+        socket.emit("copy:clipboard", {
+          text: "Copied room link to clipboard!",
+          color: "#FFF100",
+        });
       }
+    });
+
+    socket.on("game:word", ({ roomid, word }) => {
+      io.to(roomid).emit("game:word", word);
     });
 
     socket.on("player:draw", ({ drawingData, roomid }) => {
