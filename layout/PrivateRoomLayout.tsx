@@ -34,6 +34,7 @@ import Timer from "../utils/Timer";
 import RevealString from "../utils/RevealText";
 import { calculateScores, levenshteinDistance } from "../utils/gameFunctions";
 import Score from "../components/Score";
+import { updatePlayerScore } from "../redux/features/game/game";
 
 interface Message {
   text: string;
@@ -44,6 +45,7 @@ interface Player {
   name: string;
   socketId: string;
   avatar: [number, number, number];
+  score: number;
 }
 
 export default function PrivateRoomLayout({
@@ -131,8 +133,17 @@ export default function PrivateRoomLayout({
     // dispatch(showScore(false));
   };
 
-  const onTotalPlayerGuesseed = (number: number) => {
-    dispatch(setTotalPlayerGuessed(number));
+  const onTotalPlayerGuesseed = ({
+    currentCount,
+    playerSocketId,
+    score,
+  }: {
+    score: number;
+    playerSocketId: string;
+    currentCount: number;
+  }) => {
+    dispatch(updatePlayerScore({ playerSocketId, score }));
+    dispatch(setTotalPlayerGuessed(currentCount));
   };
 
   const onPlayerDisconnect = ({
@@ -151,28 +162,28 @@ export default function PrivateRoomLayout({
   };
 
   const handleTimeUp = () => {
-    dispatch(setWord(""));
-    let index;
-    dispatch((dispatch, getState) => {
-      index = getState().other.playerIndex;
+    dispatch(showScore(true));
+    // dispatch(setWord(""));
+    // let index;
+    // dispatch((dispatch, getState) => {
+    //   index = getState().other.playerIndex;
 
-      if (index + 1 > players.length) {
-        index = 0;
-        dispatch((dispatch, getState) => {
-          const nextRound = getState().game.currentRound;
-          if (nextRound !== totalRounds) {
-            dispatch(setNextRound(nextRound + 1));
-            return;
-          } else {
-            // dispatch(gameOver(true);)
-            alert("game over");
-          }
-        });
-      } else {
-        // dispatch(setPlayerIndex(index + 1));
-        dispatch(showScore(true));
-      }
-    });
+    //   if (index + 1 > players.length) {
+    //     index = 0;
+    //     dispatch((dispatch, getState) => {
+    //       const nextRound = getState().game.currentRound;
+    //       if (nextRound !== totalRounds) {
+    //         dispatch(setNextRound(nextRound + 1));
+    //         return;
+    //       } else {
+    //         // dispatch(gameOver(true);)
+    //         alert("game over");
+    //       }
+    //     });
+    //   } else {
+    //     // dispatch(setPlayerIndex(index + 1));
+    //   }
+    // });
   };
 
   useEffect(() => {
@@ -501,11 +512,11 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
 
           // Calculate score based on time and order
           const score = calculateScores(playerInfo, gameTime);
-          console.log(`Player Score: ${score}`);
 
           socket?.emit("player:guessed-word", {
             playerName: name,
             roomid,
+            playerSocketId: socket.id,
             score,
           });
         } else if (distance === 1) {

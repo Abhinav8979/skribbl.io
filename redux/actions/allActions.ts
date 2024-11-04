@@ -48,6 +48,7 @@ interface Player {
   name: string;
   socketId: string;
   avatar: [number, number, number];
+  score: number;
 }
 
 export const setRoomId = (state: number) => (dispatch: AppDispatch) => {

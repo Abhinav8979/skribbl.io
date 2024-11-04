@@ -1,5 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { ST } from "next/dist/shared/lib/utils";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 const initialState = {
   messages: [],
@@ -9,12 +8,18 @@ const initialState = {
     eye: 0,
     mouth: 0,
   },
-  score: 0,
   word: "",
   currentRound: 1,
   roomId: null,
   NumberOfPlayerGuessed: 0,
 };
+
+interface Player {
+  name: string;
+  socketId: string;
+  avatar: [number, number, number];
+  score: number;
+}
 
 interface Message {
   text: string;
@@ -57,6 +62,16 @@ const gameInformationSlice = createSlice({
     SET_TOTAL_PLAYER_GUESS: (state, action) => {
       state.NumberOfPlayerGuessed = action.payload;
     },
+    updatePlayerScore(
+      state,
+      action: PayloadAction<{ playerSocketId: string; score: number }>
+    ) {
+      const { playerSocketId, score } = action.payload;
+      const player = state.players.find((p) => p.socketId === playerSocketId);
+      if (player) {
+        player.score = score;
+      }
+    },
   },
 });
 
@@ -68,6 +83,7 @@ export const {
   SET_WORD,
   SET_NEXT_ROUND,
   SET_TOTAL_PLAYER_GUESS,
+  updatePlayerScore,
 } = gameInformationSlice.actions;
 
 export default gameInformationSlice.reducer;

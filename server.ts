@@ -84,20 +84,27 @@ app.prepare().then(() => {
       }
     });
 
-    socket.on("player:guessed-word", ({ playerName, roomid }) => {
-      if (roomMessages[roomid]) {
-        const newMessage = {
-          text: `${playerName} guessed the word!`,
-          color: "green",
-        };
-        roomMessages[roomid].push(newMessage);
-        const currentCount = playerName.get(roomid) || 0;
-        playerName.set(roomid, currentCount + 1);
-        io.to(roomid).emit("game:totalPlayerGuesseed", currentCount + 1);
+    socket.on(
+      "player:guessed-word",
+      ({ playerName, roomid, playerSocketId, score }) => {
+        if (roomMessages[roomid]) {
+          const newMessage = {
+            text: `${playerName} guessed the word!`,
+            color: "green",
+          };
+          roomMessages[roomid].push(newMessage);
+          const currentCount = playerName.get(roomid) || 0;
+          playerName.set(roomid, currentCount + 1);
+          io.to(roomid).emit("game:totalPlayerGuesseed", {
+            currentCount: currentCount + 1,
+            playerSocketId,
+            score,
+          });
 
-        io.to(roomid).emit("playerMessage:broadcast", newMessage);
+          io.to(roomid).emit("playerMessage:broadcast", newMessage);
+        }
       }
-    });
+    );
 
     socket.on("copy:clipboard", (roomid) => {
       if (roomid) {
