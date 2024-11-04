@@ -21,7 +21,7 @@ import {
   setPlay,
   setPlayerIndex,
   setRoomOwner,
-  setRoomStatus,
+  setTotalPlayerGuessed,
   setWord,
   showScore,
 } from "../redux/actions/allActions";
@@ -32,7 +32,8 @@ import GenerateAvatar from "../utils/GenerateAvatar";
 import InviteModal from "../utils/InviteModal";
 import Timer from "../utils/Timer";
 import RevealString from "../utils/RevealText";
-import { levenshteinDistance } from "../utils/gameFunctions";
+import { calculateScores, levenshteinDistance } from "../utils/gameFunctions";
+import Score from "../components/Score";
 
 interface Message {
   text: string;
@@ -66,6 +67,9 @@ export default function PrivateRoomLayout({
   const currentPlayerIndex = useAppSelector((state) => state.other.playerIndex);
   const playerTurn = useAppSelector((state) => state.other.isPlayerTurn);
   const totalPlayers = useAppSelector((state) => state.gameSetting.Players);
+  const NumberOfPlayerGuessed = useAppSelector(
+    (state) => state.game.NumberOfPlayerGuessed
+  );
 
   const socket = getSocket();
 
@@ -127,6 +131,10 @@ export default function PrivateRoomLayout({
     // dispatch(showScore(false));
   };
 
+  const onTotalPlayerGuesseed = (number: number) => {
+    dispatch(setTotalPlayerGuessed(number));
+  };
+
   const onPlayerDisconnect = ({
     playerList,
     messages,
@@ -144,8 +152,6 @@ export default function PrivateRoomLayout({
 
   const handleTimeUp = () => {
     dispatch(setWord(""));
-    // dispatch(setIsPlayerTURN(false));
-    // dispatch(setIsPlayerChoosingWord(true));
     let index;
     dispatch((dispatch, getState) => {
       index = getState().other.playerIndex;
@@ -163,11 +169,17 @@ export default function PrivateRoomLayout({
           }
         });
       } else {
-        dispatch(setPlayerIndex(index + 1));
+        // dispatch(setPlayerIndex(index + 1));
         dispatch(showScore(true));
       }
     });
   };
+
+  useEffect(() => {
+    if (NumberOfPlayerGuessed === players.length) {
+      handleTimeUp();
+    }
+  }, [NumberOfPlayerGuessed]);
 
   useEffect(() => {
     dispatch(setLoading(false));
@@ -222,6 +234,7 @@ export default function PrivateRoomLayout({
       socket.on("start", onGameStart);
       socket.on("game:word", onGameWord);
       // socket.on("game:nextPlayerIndex", onNextPlayerIndex);
+      socket.on("game:totalPlayerGuesseed", onTotalPlayerGuesseed);
 
       return () => {
         socket.off("connect", onConnect);
@@ -256,83 +269,86 @@ export default function PrivateRoomLayout({
   }
 
   return (
-    <section
-      className="flex flex-col items-center pt-2 pb-16 min-h-screen text-white"
-      style={{ backgroundImage: "url(/icon/background1.png)" }}
-    >
-      <div className="w-[86%] flex gap-1 flex-col">
-        <Link href="/">
-          <Image
-            alt="skrible.io"
-            src="/gif/logo_halloween.gif"
-            height={320}
-            width={320}
-            priority
-            unoptimized
-            style={{ width: "auto", height: "auto" }}
-          />
-        </Link>
-        <div className="flex justify-between items-center bg-white text-black p-[3px]">
-          <div className="flex gap-1 items-center">
-            <div className="relative">
-              <Image
-                src="/gif/clock.gif"
-                alt="clock image"
-                unoptimized
-                height={50}
-                width={50}
-                className="scale-[1.2]"
-              />
-              <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[42%] text-xl font-medium">
-                {word && <Timer onTimeUp={handleTimeUp} startTime={20} />}
+    <>
+      <section
+        className="flex flex-col items-center pt-2 pb-16 min-h-screen text-white"
+        style={{ backgroundImage: "url(/icon/background1.png)" }}
+      >
+        <div className="w-[86%] flex gap-1 flex-col">
+          <Link href="/">
+            <Image
+              alt="skrible.io"
+              src="/gif/logo_halloween.gif"
+              height={320}
+              width={320}
+              priority
+              unoptimized
+              style={{ width: "auto", height: "auto" }}
+            />
+          </Link>
+          <div className="flex justify-between items-center bg-white text-black p-[3px]">
+            <div className="flex gap-1 items-center">
+              <div className="relative">
+                <Image
+                  src="/gif/clock.gif"
+                  alt="clock image"
+                  unoptimized
+                  height={50}
+                  width={50}
+                  className="scale-[1.2]"
+                />
+                <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[42%] text-xl font-medium">
+                  {word && <Timer onTimeUp={handleTimeUp} startTime={20} />}
+                </p>
+              </div>
+              <p>
+                ROUND {currentRound} OF {totalRounds}
               </p>
             </div>
-            <p>
-              ROUND {currentRound} OF {totalRounds}
-            </p>
-          </div>
-          <div>
-            {word && word.length > 0 ? (
-              !playerTurn ? (
-                <div className="flex items-center flex-col">
-                  <p className="font-medium">Guess Word</p>
-                  <RevealString word={word} hint={hints} />
-                </div>
+            <div>
+              {word && word.length > 0 ? (
+                !playerTurn ? (
+                  <div className="flex items-center flex-col">
+                    <p className="font-medium">Guess Word</p>
+                    <RevealString word={word} hint={hints} />
+                  </div>
+                ) : (
+                  word
+                )
               ) : (
-                word
-              )
-            ) : (
-              <p className="font-semibold">Waiting</p>
-            )}
+                <p className="font-semibold">Waiting</p>
+              )}
+            </div>
+            <div className="cursor-pointer">
+              <Tippy
+                content="Setting"
+                animation="scale-subtle"
+                arrow={true}
+                placement="left"
+              >
+                <Image
+                  src="/gif/settings.gif"
+                  alt="settings image"
+                  height={50}
+                  width={50}
+                  unoptimized
+                />
+              </Tippy>
+            </div>
           </div>
-          <div className="cursor-pointer">
-            <Tippy
-              content="Setting"
-              animation="scale-subtle"
-              arrow={true}
-              placement="left"
-            >
-              <Image
-                src="/gif/settings.gif"
-                alt="settings image"
-                height={50}
-                width={50}
-                unoptimized
-              />
-            </Tippy>
-          </div>
-        </div>
-        <div className="flex gap-2 justify-between w-full">
-          <div className="w-[17%]">
-            <PlayerBoard players={players} socketId={socket.id} />
-          </div>
-          <div className="w-[63%]">{children}</div>
-          <div className="w-[20%]">
-            <Chat message={messages} socket={socket} />
+          <div className="flex gap-2 justify-between w-full">
+            <div className="w-[17%]">
+              <PlayerBoard players={players} socketId={socket.id} />
+            </div>
+            <div className="w-[63%]">{children}</div>
+            <div className="w-[20%]">
+              <Chat message={messages} socket={socket} />
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+      <Score players={players} />
+    </>
   );
 }
 
@@ -440,13 +456,36 @@ interface MessageProps {
   socket: Socket | null;
 }
 
+interface PlayerInfo {
+  guessTime: number;
+  guessOrder: number;
+}
+
 const Chat: React.FC<MessageProps> = ({ message, socket }) => {
-  const [playerMessage, setPlayerMessage] = useState("");
-  const { roomid } = useParams();
+  const [playerMessage, setPlayerMessage] = useState<string>("");
+  const { roomid } = useParams<{ roomid: string }>();
   const messageEndRef = useRef<HTMLDivElement>(null);
+
   const play = useAppSelector((state) => state.other.Play);
   const word = useAppSelector((state) => state.game.word);
   const dispatch = useAppDispatch();
+
+  const players = useAppSelector((state) => state.game.players);
+  const gameTime = useAppSelector((state) => state.gameSetting.Drawtime);
+  const NumberOfPlayerGuessed = useAppSelector(
+    (state) => state.game.NumberOfPlayerGuessed
+  );
+
+  const [timeElapsed, setTimeElapsed] = useState<number>(0);
+
+  // Update elapsed time every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeElapsed((prevTime) => prevTime + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [word]);
 
   const handleSendRequest = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && playerMessage.trim()) {
@@ -455,7 +494,20 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
 
         if (distance === 0) {
           const name = sessionStorage.getItem("playerName");
-          socket?.emit("player:guessed-word", { playerName: name, roomid });
+          const playerInfo: PlayerInfo = {
+            guessTime: timeElapsed,
+            guessOrder: NumberOfPlayerGuessed,
+          };
+
+          // Calculate score based on time and order
+          const score = calculateScores(playerInfo, gameTime);
+          console.log(`Player Score: ${score}`);
+
+          socket?.emit("player:guessed-word", {
+            playerName: name,
+            roomid,
+            score,
+          });
         } else if (distance === 1) {
           dispatch((dispatch, getState) => {
             const currentMessages = getState().game.messages;
@@ -485,7 +537,7 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
   }, [message]);
 
   return (
-    <div className="text-sm text-black bg-white gap-12 h-[75vh] flex flex-col justify-end rounded-md ">
+    <div className="text-sm text-black bg-white gap-12 h-[75vh] flex flex-col justify-end rounded-md">
       <div className="h-72 overflow-y-scroll flex flex-col gap-2 mb-4">
         <div className="align-text-bottom font-medium capitalize flex gap-1 flex-col">
           {message &&

@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { ST } from "next/dist/shared/lib/utils";
 
 const initialState = {
   messages: [],
@@ -53,6 +54,9 @@ const gameInformationSlice = createSlice({
       // will evaluate the score here
       state.currentRound = action.payload;
     },
+    SET_TOTAL_PLAYER_GUESS: (state, action) => {
+      state.NumberOfPlayerGuessed = action.payload;
+    },
   },
 });
 
@@ -63,6 +67,7 @@ export const {
   SET_AVATAR,
   SET_WORD,
   SET_NEXT_ROUND,
+  SET_TOTAL_PLAYER_GUESS,
 } = gameInformationSlice.actions;
 
 export default gameInformationSlice.reducer;

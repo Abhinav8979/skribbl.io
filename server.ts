@@ -27,6 +27,8 @@ let roomMessages: Record<string, Message[]> = {};
 
 let availableRoom: string[] = [];
 
+let playerName: Map<string, number> = new Map();
+
 app.prepare().then(() => {
   const httpServer = createServer(handler);
   const io = new Server(httpServer);
@@ -89,6 +91,9 @@ app.prepare().then(() => {
           color: "green",
         };
         roomMessages[roomid].push(newMessage);
+        const currentCount = playerName.get(roomid) || 0;
+        playerName.set(roomid, currentCount + 1);
+        io.to(roomid).emit("game:totalPlayerGuesseed", currentCount + 1);
 
         io.to(roomid).emit("playerMessage:broadcast", newMessage);
       }

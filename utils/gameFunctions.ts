@@ -1,48 +1,21 @@
-type Player = {
-  id: string; // Unique identifier for each player
-  guessTime: number; // Time in seconds when the player guessed correctly
-  guessOrder: number; // Order in which the player guessed (1 for first, 2 for second, etc.)
-};
-
-type GameResult = {
-  playerId: string;
-  points: number;
-}[];
+interface PlayerInfo {
+  guessTime: number;
+  guessOrder: number;
+}
 
 export const calculateScores = (
-  players: Player[],
-  gameTime: number,
-  maxPoints: number = 200,
-  minPoints: number = 50
-): { guesserScores: GameResult; drawerScore: number } => {
-  // Calculate the time-based deduction rate
-  const deductionRate = (maxPoints * 0.5) / gameTime;
+  playerInfo: PlayerInfo,
+  gameTime: number
+): number => {
+  const maxPoints = 200;
+  const deductionRate = (maxPoints * 0.5) / gameTime; // Deduction rate based on game time
+  const timePenalty = playerInfo.guessTime * deductionRate;
 
-  // Calculate scores for each player based on their guess time and order
-  const guesserScores: GameResult = players.map((player) => {
-    // Base points for this player as the first guesser
-    const timePenalty = player.guessTime * deductionRate;
-    let playerPoints = maxPoints - timePenalty;
+  // Points decrease for subsequent correct guesses (20 points less for each additional guesser)
+  const orderPenalty = 20 * playerInfo.guessOrder;
 
-    // Apply order penalty for subsequent guessers
-    playerPoints -= (player.guessOrder - 1) * 20; // Deduct 20 points per guess order
-
-    // Ensure points do not go below the minimum score
-    playerPoints = Math.max(playerPoints, minPoints);
-
-    return { playerId: player.id, points: Math.round(playerPoints) };
-  });
-
-  // Calculate the drawer's score based on the number of correct guesses
-  const correctGuesses = players.length;
-  const baseDrawerPoints = 50; // Base points for the drawer
-  const bonusPerGuess = 10; // Bonus points for each correct guess
-  const drawerScore = baseDrawerPoints + correctGuesses * bonusPerGuess;
-
-  return {
-    guesserScores,
-    drawerScore,
-  };
+  // Calculate total score for this player
+  return Math.max(maxPoints - timePenalty - orderPenalty, 50); // Minimum score of 50 points
 };
 
 export function levenshteinDistance({ a, b }: { a: string; b: string }) {

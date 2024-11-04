@@ -19,6 +19,7 @@ import {
   SET_GAME_PLAYERS,
   SET_NEXT_ROUND,
   SET_ROOM_ID,
+  SET_TOTAL_PLAYER_GUESS,
   SET_WORD,
 } from "../features/game/game";
 
@@ -119,3 +120,8 @@ export const setIsDrawing = (payload: boolean) => (dispatch: AppDispatch) => {
 export const setGameOver = (payload: boolean) => (dispatch: AppDispatch) => {
   dispatch(SET_GAME_OVER(payload));
 };
+
+export const setTotalPlayerGuessed =
+  (payload: number) => (dispatch: AppDispatch) => {
+    dispatch(SET_TOTAL_PLAYER_GUESS(payload));
+  };
