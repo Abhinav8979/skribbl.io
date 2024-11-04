@@ -349,7 +349,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
   const playerIndex = useAppSelector((state) => state.other.playerIndex);
 
   const isPlayerTurn = useAppSelector((state) => state.other.isPlayerTurn);
-  const isOwner = useAppSelector((state) => state.other.PlayerOwner);
+  const isOwner = useAppSelector((state) => state.other.roomOwner);
   const isDrawing = useAppSelector((state) => state.other.isDrawing);
 
   return (
