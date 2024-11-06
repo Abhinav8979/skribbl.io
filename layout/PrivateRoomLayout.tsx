@@ -166,34 +166,32 @@ export default function PrivateRoomLayout({
 
   const handleTimeUp = () => {
     dispatch(showScore(true));
-    // dispatch(setWord(""));
-    // let index;
-    // dispatch((dispatch, getState) => {
-    //   index = getState().other.playerIndex;
-
-    //   if (index + 1 > players.length) {
-    //     index = 0;
-    //     dispatch((dispatch, getState) => {
-    //       const nextRound = getState().game.currentRound;
-    //       if (nextRound !== totalRounds) {
-    //         dispatch(setNextRound(nextRound + 1));
-    //         return;
-    //       } else {
-    //         // dispatch(gameOver(true);)
-    //         alert("game over");
-    //       }
-    //     });
-    //   } else {
-    //     // dispatch(setPlayerIndex(index + 1));
-    //   }
-    // });
   };
 
   // this use effect should be called whenever player guess the word correctly
   useEffect(() => {
-    if (players.length >= 1 && NumberOfPlayerGuessed === players.length) {
+    if (players.length >= 2 && NumberOfPlayerGuessed >= players.length - 1) {
       dispatch(setTotalPlayerGuessed(0));
       dispatch(showScore(true));
+      dispatch(setWord(""));
+      let index;
+      dispatch((dispatch, getState) => {
+        index = getState().other.playerIndex;
+        if (index + 1 >= players.length) {
+          dispatch((dispatch, getState) => {
+            const currentRound = getState().game.currentRound;
+            if (currentRound !== totalRounds) {
+              dispatch(setNextRound(currentRound + 1));
+            } else {
+              // dispatch(gameOver(true);)
+              alert("game over");
+            }
+            dispatch(setPlayerIndex(0));
+          });
+        } else {
+          dispatch(setPlayerIndex(index + 1));
+        }
+      });
     }
   }, [NumberOfPlayerGuessed]);
 
@@ -271,13 +269,13 @@ export default function PrivateRoomLayout({
   // should be called when the score is been displayed to the players
   useEffect(() => {
     if (currentPlayerIndex < players.length) {
-      dispatch(setIsPlayerChoosingWord(true));
       const isCurrentPlayerChoosingWord =
         players[currentPlayerIndex]?.socketId === socket.id;
 
       dispatch(setIsPlayerTURN(isCurrentPlayerChoosingWord));
+      dispatch(setIsPlayerChoosingWord(true));
     }
-  }, [socket, currentPlayerIndex, players, currentRound]);
+  }, [currentPlayerIndex, players]);
 
   if (!isConnected) {
     return <p>You are offline</p>;
@@ -314,7 +312,7 @@ export default function PrivateRoomLayout({
                 />
                 <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[42%] text-xl font-medium">
                   {word && !showRoundScore ? (
-                    <Timer onTimeUp={handleTimeUp} startTime={20} />
+                    <Timer onTimeUp={handleTimeUp} startTime={5} />
                   ) : (
                     0
                   )}
@@ -390,14 +388,18 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
   return (
     <>
       {/* {inviteModal && (
-        <div className="absolute inset-0  flex items-center justify-center">
-          <div className="bg-black opacity-40 absolute inset-0"></div>
-          <InviteModal
-            avatar={avatar}
-            name={players?.find((player) => player.socketId === socketId)?.name}
-            setInviteModal={setInviteModal}
-            key={socketId}
-          />
+        <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6 md:p-8 z-30">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-gray-200/50 backdrop-blur-lg"></div>
+          <div className="flex flex-col items-center justify-center bg-white bg-opacity-30 backdrop-blur-md border border-white/40 rounded-xl shadow-lg p-6 w-full sm:w-[350px] md:w-[400px] lg:w-[450px]">
+            <InviteModal
+              avatar={avatar}
+              name={
+                players?.find((player) => player.socketId === socketId)?.name
+              }
+              setInviteModal={setInviteModal}
+              key={socketId}
+            />
+          </div>
         </div>
       )} */}
       {players && players.length > 0 ? (

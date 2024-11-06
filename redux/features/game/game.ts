@@ -69,7 +69,7 @@ const gameInformationSlice = createSlice({
       const { playerSocketId, score } = action.payload;
       const player = state.players.find((p) => p.socketId === playerSocketId);
       if (player) {
-        player.score = score;
+        player.score = Math.ceil(player.score + score);
       }
     },
   },

@@ -14,8 +14,8 @@ export const calculateScores = (
   // Points decrease for subsequent correct guesses (20 points less for each additional guesser)
   const orderPenalty = 20 * playerInfo.guessOrder;
 
-  // Calculate total score for this player
-  return Math.max(maxPoints - timePenalty - orderPenalty, 50); // Minimum score of 50 points
+  // Calculate total score for this player and round down to the nearest integer
+  return Math.max(Math.floor(maxPoints - timePenalty - orderPenalty), 0);
 };
 
 export function levenshteinDistance({ a, b }: { a: string; b: string }) {
