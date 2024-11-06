@@ -13,10 +13,7 @@ import {
 } from "../../../redux/actions/allActions";
 import { getSocket } from "../../socket";
 import { useParams } from "next/navigation";
-
-interface Player {
-  socketId: string;
-}
+import { Player } from "../../../utils/tsTypes";
 
 export default function Page() {
   const play = useAppSelector((state) => state.other.Play);

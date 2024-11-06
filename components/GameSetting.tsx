@@ -9,29 +9,12 @@ import { Socket } from "socket.io-client";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setGameSetting } from "../redux/actions/allActions";
 import { getSocket } from "../app/socket";
+import { PlayerSetting, Setting } from "../utils/tsTypes";
 
 const GameSetting = () => {
-  type SettingOption = number | string;
-
   const { roomid } = useParams();
 
   const isOwner = useAppSelector((state) => state?.other?.roomOwner);
-
-  interface Setting {
-    name: string;
-    options: SettingOption[];
-    currentValue: SettingOption;
-  }
-
-  interface PlayerSetting {
-    Players: number;
-    Drawtime: number;
-    rounds: number;
-    wordCount: number;
-    hints: number;
-    Language: string;
-    gameMode: string;
-  }
 
   const setting: Setting[] = [
     {

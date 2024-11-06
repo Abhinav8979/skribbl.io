@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { Socket } from "socket.io-client";
 import { getSocket } from "../app/socket";
 import {
+  gameOver,
   setAvatar,
   setGameMessage,
   setGameOver,
@@ -35,18 +36,8 @@ import RevealString from "../utils/RevealText";
 import { calculateScores, levenshteinDistance } from "../utils/gameFunctions";
 import Score from "../components/Score";
 import { updatePlayerScore } from "../redux/features/game/game";
-
-interface Message {
-  text: string;
-  color: string;
-}
-
-interface Player {
-  name: string;
-  socketId: string;
-  avatar: [number, number, number];
-  score: number;
-}
+import GameOver from "../components/GameOver";
+import { Message, MessageProps, Player, PlayerBoardProps, PlayerInfo } from "../utils/tsTypes";
 
 export default function PrivateRoomLayout({
   children,
@@ -75,6 +66,8 @@ export default function PrivateRoomLayout({
   const showRoundScore = useAppSelector((state) => state.other.showScore);
 
   const play = useAppSelector((state) => state.other.Play);
+
+  const isGameover = useAppSelector((state) => state.other.gameOver);
 
   const socket = getSocket();
 
@@ -183,7 +176,8 @@ export default function PrivateRoomLayout({
             if (currentRound !== totalRounds) {
               dispatch(setNextRound(currentRound + 1));
             } else {
-              // dispatch(gameOver(true);)
+              dispatch(gameOver(true));
+              dispatch(setPlay(false));
               alert("game over");
             }
             dispatch(setPlayerIndex(0));
@@ -398,13 +392,9 @@ export default function PrivateRoomLayout({
         </div>
       </section>
       {showRoundScore && <Score players={players} />}
+      {isGameover && !play && <GameOver />}
     </>
   );
-}
-
-interface PlayerBoardProps {
-  players?: Player[]; // Updated to expect Player objects
-  socketId: string | undefined;
 }
 
 const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
@@ -463,7 +453,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
                   {player.name}
                   <p className="ml-1">{isCurrentPlayer && "(You)"}</p>
                 </div>
-                <p className="whitespace-nowrap">0 points</p>
+                <p className="whitespace-nowrap">{player.score} points</p>
               </div>
               {isDrawing && (
                 <div>
@@ -505,16 +495,6 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
     </>
   );
 };
-
-interface MessageProps {
-  message: Message[];
-  socket: Socket | null;
-}
-
-interface PlayerInfo {
-  guessTime: number;
-  guessOrder: number;
-}
 
 const Chat: React.FC<MessageProps> = ({ message, socket }) => {
   const [playerMessage, setPlayerMessage] = useState<string>("");

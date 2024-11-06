@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Player, SetGameMessageAction, State } from "../../../utils/tsTypes";
 
 const initialState = {
   messages: [],
@@ -13,26 +14,6 @@ const initialState = {
   roomId: null,
   NumberOfPlayerGuessed: 0,
 };
-
-interface Player {
-  name: string;
-  socketId: string;
-  avatar: [number, number, number];
-  score: number;
-}
-
-interface Message {
-  text: string;
-  color: string;
-}
-interface State {
-  messages: Message[];
-}
-
-interface SetGameMessageAction {
-  type: string;
-  payload: Message[];
-}
 
 const gameInformationSlice = createSlice({
   name: "gameSetting",

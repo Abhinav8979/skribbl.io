@@ -1,7 +1,4 @@
-interface PlayerInfo {
-  guessTime: number;
-  guessOrder: number;
-}
+import { PlayerInfo } from "./tsTypes";
 
 export const calculateScores = (
   playerInfo: PlayerInfo,

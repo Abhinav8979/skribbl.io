@@ -22,34 +22,8 @@ import {
   SET_TOTAL_PLAYER_GUESS,
   SET_WORD,
 } from "../features/game/game";
-
-interface PlayerSetting {
-  Players: number;
-  Drawtime: number;
-  rounds: number;
-  wordCount: number;
-  hints: number;
-  Language: string;
-  gameMode: string;
-}
-
-interface Message {
-  text: string;
-  color: string;
-}
-
-interface avatar {
-  face: number;
-  eye: number;
-  mouth: number;
-}
-
-interface Player {
-  name: string;
-  socketId: string;
-  avatar: [number, number, number];
-  score: number;
-}
+import { Avatar, Player, PlayerSetting } from "../../utils/tsTypes";
+import { Message } from "postcss";
 
 export const setRoomId = (state: number) => (dispatch: AppDispatch) => {
   dispatch(SET_ROOM_ID(state));
@@ -77,7 +51,7 @@ export const setGamePlayers =
     dispatch(SET_GAME_PLAYERS(playerList));
   };
 
-export const setAvatar = (avatar: avatar) => (dispatch: AppDispatch) => {
+export const setAvatar = (avatar: Avatar) => (dispatch: AppDispatch) => {
   dispatch(SET_AVATAR(avatar));
 };
 
@@ -126,3 +100,7 @@ export const setTotalPlayerGuessed =
   (payload: number) => (dispatch: AppDispatch) => {
     dispatch(SET_TOTAL_PLAYER_GUESS(payload));
   };
+
+export const gameOver = (payload: boolean) => (dispatch: AppDispatch) => {
+  dispatch(SET_GAME_OVER(payload));
+};
