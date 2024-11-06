@@ -86,10 +86,10 @@ app.prepare().then(() => {
 
     socket.on(
       "player:guessed-word",
-      ({ playerName, roomid, playerSocketId, score }) => {
+      ({ name, roomid, playerSocketId, score }) => {
         if (roomMessages[roomid]) {
           const newMessage = {
-            text: `${playerName} guessed the word!`,
+            text: `${name} guessed the word!`,
             color: "green",
           };
           roomMessages[roomid].push(newMessage);
@@ -105,6 +105,10 @@ app.prepare().then(() => {
         }
       }
     );
+
+    socket.on("game:next-round", (roomid) => {
+      playerName.set(roomid, 0);
+    });
 
     socket.on("copy:clipboard", (roomid) => {
       if (roomid) {

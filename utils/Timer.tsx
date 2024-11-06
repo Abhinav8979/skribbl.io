@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 interface Timer {
   startTime: number;
-  onTimeUp: () => void; // Function to be called when the timer reaches zero
+  onTimeUp: () => void;
 }
 
 const Timer = ({ startTime, onTimeUp }: Timer) => {
@@ -10,7 +10,7 @@ const Timer = ({ startTime, onTimeUp }: Timer) => {
 
   useEffect(() => {
     if (time <= 0) {
-      onTimeUp(); // Trigger the action when the timer reaches zero
+      onTimeUp();
       return;
     }
 
@@ -18,12 +18,10 @@ const Timer = ({ startTime, onTimeUp }: Timer) => {
       setTime((prevTime) => prevTime - 1);
     }, 1000);
 
-    return () => clearInterval(intervalId); // Clean up the interval on component unmount
-  }, [time, onTimeUp]);
+    return () => clearInterval(intervalId);
+  }, [time]);
 
-  // Format time (optional) to show as mm:ss
   const formatTime = (time: number) => {
-    // const minutes = Math.floor(time / 60);
     const seconds = time;
     return `${String(seconds)}`;
   };

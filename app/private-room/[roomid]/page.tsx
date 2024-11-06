@@ -9,6 +9,7 @@ import { generateRandomWords } from "../../../utils/utils";
 import {
   setIsPlayerChoosingWord,
   setWord,
+  showScore,
 } from "../../../redux/actions/allActions";
 import { getSocket } from "../../socket";
 import { useParams } from "next/navigation";
@@ -27,6 +28,7 @@ export default function Page() {
   );
   const index = useAppSelector((state) => state.other.playerIndex);
   const isplayerturn = useAppSelector((state) => state.other.isPlayerTurn);
+  const showRoundScore = useAppSelector((state) => state.other.showScore);
 
   const [wordsList, SetWordsList] = useState<string[]>([]);
   const socket = getSocket();
@@ -41,6 +43,10 @@ export default function Page() {
   useEffect(() => {
     SetWordsList(generateRandomWords());
   }, [index]);
+
+  // useEffect(() => {
+  //   console.log("Updated wordsList:", wordsList);
+  // }, [wordsList]);
 
   const handleTimeUp = () => {
     const randomWord = wordsList[Math.floor(Math.random() * wordsList.length)];
@@ -58,7 +64,7 @@ export default function Page() {
   return (
     <section className="relative">
       {!play ? <GameSetting /> : <PlayerDrawingBoard />}
-      {play && isPlayerChoosingWord && (
+      {play && !showRoundScore && isPlayerChoosingWord && (
         <div
           className="flex justify-center items-center absolute w-full h-[565px] inset-0"
           style={{
@@ -79,9 +85,9 @@ export default function Page() {
               </h1>
               <div className="flex gap-10 mt-7">
                 {isplayerturn &&
-                  wordsList.map((word: string) => (
+                  wordsList.map((word: string, index) => (
                     <button
-                      key={word}
+                      key={index}
                       onClick={() => handleClick(word)}
                       className="p-2 bg-white text-black rounded-custom"
                     >

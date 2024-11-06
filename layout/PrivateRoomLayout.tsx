@@ -55,23 +55,26 @@ export default function PrivateRoomLayout({
 }>) {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [playerName, setPlayerName] = useState<string | null>(null);
-  // const playerName = sessionStorage.getItem("playerName");
 
   const messages = useAppSelector((state) => state.game?.messages);
   const players = useAppSelector((state) => state.game?.players);
 
   const router = useRouter();
-  // const rounds = useAppSelector((state) => state.gameSetting.rounds);
   const word = useAppSelector((state) => state.game?.word);
   const currentRound = useAppSelector((state) => state.game.currentRound);
+
   const totalRounds = useAppSelector((state) => state.gameSetting.rounds);
   const hints = useAppSelector((state) => state.gameSetting.hints);
   const currentPlayerIndex = useAppSelector((state) => state.other.playerIndex);
+
   const playerTurn = useAppSelector((state) => state.other.isPlayerTurn);
   const totalPlayers = useAppSelector((state) => state.gameSetting.Players);
   const NumberOfPlayerGuessed = useAppSelector(
     (state) => state.game.NumberOfPlayerGuessed
   );
+  const showRoundScore = useAppSelector((state) => state.other.showScore);
+
+  const play = useAppSelector((state) => state.other.Play);
 
   const socket = getSocket();
 
@@ -186,12 +189,15 @@ export default function PrivateRoomLayout({
     // });
   };
 
+  // this use effect should be called whenever player guess the word correctly
   useEffect(() => {
-    if (NumberOfPlayerGuessed === players.length) {
-      handleTimeUp();
+    if (players.length >= 1 && NumberOfPlayerGuessed === players.length) {
+      dispatch(setTotalPlayerGuessed(0));
+      dispatch(showScore(true));
     }
   }, [NumberOfPlayerGuessed]);
 
+  // This use effect should be called at the starting of the page load
   useEffect(() => {
     dispatch(setLoading(false));
 
@@ -215,11 +221,13 @@ export default function PrivateRoomLayout({
     }
   }, []);
 
+  // should be called at the starting of the page load and when any new player joins it
   useEffect(() => {
     const isOwner = socket.id === players[0]?.socketId;
     dispatch(setRoomOwner(isOwner));
   }, [players]);
 
+  // should be called at the starting of the page load
   useEffect(() => {
     // if (!playerName) {
     //   let pageUrl = window.location.origin;
@@ -254,26 +262,22 @@ export default function PrivateRoomLayout({
         socket.off("playerMessage:broadcast", onMessageBroadcast);
         socket.off("copy:clipboard", onMessageBroadcast);
         socket.off("start", onGameStart);
+        socket.off("game:word", onGameWord);
+        socket.off("game:totalPlayerGuesseed", onTotalPlayerGuesseed);
       };
     }
   }, [socket, playerName, roomid, router]);
 
+  // should be called when the score is been displayed to the players
   useEffect(() => {
     if (currentPlayerIndex < players.length) {
+      dispatch(setIsPlayerChoosingWord(true));
       const isCurrentPlayerChoosingWord =
         players[currentPlayerIndex]?.socketId === socket.id;
 
-      dispatch(setIsPlayerChoosingWord(true));
       dispatch(setIsPlayerTURN(isCurrentPlayerChoosingWord));
-    } else {
-      if (currentRound + 1 > totalRounds) {
-        dispatch(setGameOver(true));
-      } else {
-        dispatch(setNextRound(currentRound + 1));
-        dispatch(setPlayerIndex(0));
-      }
     }
-  }, [socket, currentPlayerIndex, players]);
+  }, [socket, currentPlayerIndex, players, currentRound]);
 
   if (!isConnected) {
     return <p>You are offline</p>;
@@ -309,7 +313,11 @@ export default function PrivateRoomLayout({
                   className="scale-[1.2]"
                 />
                 <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[42%] text-xl font-medium">
-                  {word && <Timer onTimeUp={handleTimeUp} startTime={20} />}
+                  {word && !showRoundScore ? (
+                    <Timer onTimeUp={handleTimeUp} startTime={20} />
+                  ) : (
+                    0
+                  )}
                 </p>
               </div>
               <p>
@@ -358,7 +366,7 @@ export default function PrivateRoomLayout({
           </div>
         </div>
       </section>
-      <Score players={players} />
+      {showRoundScore && <Score players={players} />}
     </>
   );
 }
@@ -403,7 +411,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
             >
               <div>
                 <p className="font-bold">#{index + 1}</p>
-                {isOwner && (
+                {player.socketId === players[0].socketId && (
                   <p>
                     <Image
                       src="/gif/owner.gif"
@@ -514,7 +522,7 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
           const score = calculateScores(playerInfo, gameTime);
 
           socket?.emit("player:guessed-word", {
-            playerName: name,
+            name,
             roomid,
             playerSocketId: socket.id,
             score,
