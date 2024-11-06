@@ -15,7 +15,7 @@ const DrawingBoard: React.FC = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [strokeWidth, setStrokeWidth] = useState(1);
 
-  const [dimensions, setDimensions] = useState({ width: 810, height: 565 });
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
 
   const containerRef = useRef(null);
   const socket = getSocket();
@@ -70,25 +70,18 @@ const DrawingBoard: React.FC = () => {
   }, [socket]);
 
   useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const { offsetWidth, offsetHeight } = containerRef.current;
-        setDimensions({
-          width: offsetWidth,
-          height: offsetHeight,
-        });
-      } else {
-        setDimensions({
-          width: window.innerWidth * 0.8,
-          height: window.innerHeight * 0.7,
-        });
-      }
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth <= 768);
     };
 
-    updateDimensions();
-    window.addEventListener("resize", updateDimensions);
+    // Add event listener on component mount
+    window.addEventListener("resize", handleResize);
 
-    return () => window.removeEventListener("resize", updateDimensions);
+    // Call handler right away so state gets updated with initial width
+    handleResize();
+
+    // Clean up event listener on component unmount
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleMouseDown = (e: any) => {
@@ -142,23 +135,21 @@ const DrawingBoard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col w-full">
+    <div className="flex flex-col w-full relative">
       <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
         <Stage
-          width={dimensions.width}
-          height={dimensions.height}
+          width={810}
+          height={isMobileView ? 270 : 560}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
         >
+          {/* Background Layer */}
           <Layer>
-            <Rect
-              width={dimensions.width}
-              height={dimensions.height}
-              fill="white"
-            />
+            <Rect width={830} height={600} fill="white" />
           </Layer>
 
+          {/* Drawing Layer */}
           <Layer>
             {lines.map((line, i) => (
               <Line
@@ -178,25 +169,27 @@ const DrawingBoard: React.FC = () => {
       </div>
 
       {isPlayerTurn && (
-        <div className="flex gap-2 justify-between items-center mt-2">
-          <div className="flex flex-wrap w-[300px]">
+        <div className="flex gap-2 justify-between items-center mt-2 md:relative absolute bottom-0 left-0 w-fit">
+          <div className="flex flex-wrap w-[150px] md:w-[300px]">
             {colors.map((color) => (
               <button
                 key={color}
                 onClick={() => setStrokeColor(color)}
                 style={{
                   backgroundColor: color,
-                  width: "24px",
-                  height: "24px",
+                  width: isMobileView ? "12px" : "24px",
+                  height: isMobileView ? "12px" : "24px",
                   cursor: "pointer",
                 }}
               />
             ))}
           </div>
-          <div className="flex items-center justify-between bg-white text-black p-[3px] rounded-custom">
-            <label className="mr-2 font-semibold">Stroke Width:</label>
+          <div className="flex md:flex-row flex-col  items-center justify-between bg-white text-black p-[3px] rounded-custom">
+            <label className="mr-2 font-semibold text-[9px] md:text-base">
+              Stroke Width:
+            </label>
             <select
-              className="border rounded-md p-1 bg-white text-black"
+              className="border md:rounded-md p-1 text-[7px] md:text-base bg-white text-black "
               value={strokeWidth}
               onChange={handleStrokeWidthChange}
             >
@@ -218,8 +211,8 @@ const DrawingBoard: React.FC = () => {
                 <button
                   onClick={() => handleToolClick("brush")}
                   style={{
-                    width: "32px",
-                    height: "32px",
+                    width: isMobileView ? "15px" : "32px",
+                    height: isMobileView ? "15px" : "32px",
                     background: "url(/gif/pen.gif)",
                     backgroundSize: "contain",
                   }}
@@ -235,8 +228,8 @@ const DrawingBoard: React.FC = () => {
                 <button
                   onClick={toggleEraseMode}
                   style={{
-                    width: "32px",
-                    height: "32px",
+                    width: isMobileView ? "16px" : "32px",
+                    height: isMobileView ? "16px" : "32px",
                     background: "url(/gif/eraser.gif)",
                     backgroundSize: "contain",
                   }}
@@ -248,8 +241,8 @@ const DrawingBoard: React.FC = () => {
                 <button
                   onClick={handleClearCanvas}
                   style={{
-                    width: "32px",
-                    height: "32px",
+                    width: isMobileView ? "16px" : "32px",
+                    height: isMobileView ? "16px" : "32px",
                     background: "url(/gif/clear.gif)",
                     backgroundSize: "contain",
                   }}
@@ -261,8 +254,8 @@ const DrawingBoard: React.FC = () => {
                 <button
                   onClick={handleUndo}
                   style={{
-                    width: "32px",
-                    height: "32px",
+                    width: isMobileView ? "16px" : "32px",
+                    height: isMobileView ? "16px" : "32px",
                     background: "url(/gif/undo.gif)",
                     backgroundSize: "contain",
                   }}

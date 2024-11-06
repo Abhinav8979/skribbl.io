@@ -38,14 +38,12 @@ const RevealString = ({ word, hint }: { word: string; hint: number }) => {
 
   return (
     <>
-      <h1>
-        {displayText &&
-          displayText.split("").map((char, index) => (
-            <span className="mx-1 font-semibold" key={index}>
-              {char}
-            </span>
-          ))}
-      </h1>
+      {displayText &&
+        displayText.split("").map((char, index) => (
+          <p className="font-bold" key={index}>
+            {char}
+          </p>
+        ))}
     </>
   );
 };

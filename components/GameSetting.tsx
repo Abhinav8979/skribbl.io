@@ -50,22 +50,22 @@ const GameSetting = () => {
       currentValue: 80,
     },
     {
-      name: "rounds",
+      name: "Rounds",
       options: Array.from({ length: 19 }, (_, i) => i + 2),
       currentValue: 8,
     },
     {
-      name: "gameMode",
+      name: "GameMode",
       options: ["Normal", "Hidden", "Combination"],
       currentValue: "normal",
     },
     {
-      name: "wordCount",
+      name: "WordCount",
       options: [1, 2, 3, 4, 5],
       currentValue: 3,
     },
     {
-      name: "hints",
+      name: "Hints",
       options: [0, 1, 2, 3, 4, 5],
       currentValue: 2,
     },
@@ -115,58 +115,66 @@ const GameSetting = () => {
       style={{
         cursor: isOwner ? "default" : "not-allowed",
       }}
-      className="flex p-2 flex-col gap-1 bg-[#35394A] rounded-custom text-white relative"
+      className="flex md:p-2 flex-col bg-[#35394A] rounded-custom text-white relative"
     >
       {!isOwner && <div className="absolute inset-0 bg-black opacity-40"></div>}
 
-      {setting.map((ele, index) => (
-        <div key={index} className="flex justify-between items-center py-1">
-          <div className="flex items-center gap-2">
-            <Image
-              src={`/gif/setting_${index}.gif`}
-              alt="image"
-              unoptimized
-              height={30}
-              width={30}
-            />
-            <span className="text-lg font-semibold">{ele.name}</span>
-          </div>
-          <select
-            className="bg-white text-black p-2 rounded w-1/2"
-            defaultValue={ele.currentValue}
-            onChange={(e) => handleChange(e, ele.name)}
+      <div className="flex flex-wrap md:flex-col flex-row md:flex-nowrap justify-between">
+        {setting.map((ele, index) => (
+          <div
+            key={index}
+            className="flex  justify-between items-center pb-1 md:w-auto w-1/2 my-[3px] gap-3"
           >
-            {ele.options.map((option, i) => (
-              <option key={i} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-      ))}
+            <div className="flex items-center gap-[3px] md:gap-2">
+              <Image
+                src={`/gif/setting_${index}.gif`}
+                alt="image"
+                unoptimized
+                height={30}
+                width={30}
+                className="md:w-[30px] md:h-[30px] h-[20px] w-[20px]"
+              />
+              <span className="md:text-lg text-xs font-semibold">
+                {ele.name}
+              </span>
+            </div>
+            <select
+              className="bg-white text-black md:w-1/2 w-[40%]  text-xs md:text-lg sm:h-6 md:h-10 sm:p-1" // Apply 6px text size and small height on small screens
+              defaultValue={ele.currentValue}
+              onChange={(e) => handleChange(e, ele.name)}
+            >
+              {ele.options.map((option, i) => (
+                <option key={i} value={option} className="sm:text-xs">
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
+      </div>
 
-      <div className="flex justify-between items-center mt-4">
-        <h3 className="font-semibold text-lg">Custom Words</h3>
+      <div className="flex justify-between items-center md:mt-4 text-xs">
+        <h3 className="font-semibold md:text-lg">Custom Words</h3>
         <div className="flex items-center gap-2">
           <p>Use custom words only</p>
           <input
             type="checkbox"
             name="customWord"
             id="customWord"
-            className="w-[20px] h-[20px]"
+            className="md:w-[20px] md:h-[20px] w-[16px] h-[16px]"
           />
         </div>
       </div>
 
       <textarea
-        className="w-full h-36 bg-white text-black p-2 rounded mt-2"
+        className="w-full h-24 md:h-36 bg-white text-black text-xs md:text-base p-2 rounded mt-1 mb-1"
         placeholder="Minimum of 10 words. 1-32 characters per word! 20000 characters maximum. Separated by a comma (,) "
       />
 
-      <div className="flex gap-1 text-lg font-bold">
+      <div className="flex md:gap-1 gap-[3px] text-xs md:text-lg font-bold px-[3px]">
         <button
           onClick={handleGameStart}
-          className="bg-green-600 hover:bg-green-700 py-3 rounded-custom w-3/4"
+          className="bg-green-600 hover:bg-green-700 md:py-3 py-2 rounded-custom w-3/4"
         >
           Start!
         </button>

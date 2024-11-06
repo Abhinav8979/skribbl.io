@@ -277,6 +277,24 @@ export default function PrivateRoomLayout({
     }
   }, [currentPlayerIndex, players]);
 
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
+
+  // Effect to update state on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth <= 768);
+    };
+
+    // Add event listener on component mount
+    window.addEventListener("resize", handleResize);
+
+    // Call handler right away so state gets updated with initial width
+    handleResize();
+
+    // Clean up event listener on component unmount
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   if (!isConnected) {
     return <p>You are offline</p>;
   }
@@ -284,56 +302,57 @@ export default function PrivateRoomLayout({
   return (
     <>
       <section
-        className="flex flex-col items-center pt-2 pb-16 min-h-screen text-white"
+        className="flex flex-col items-center md:pb-16   h-screen text-white "
         style={{ backgroundImage: "url(/icon/background1.png)" }}
       >
-        <div className="w-[86%] flex gap-1 flex-col">
-          <Link href="/">
+        <div className="md:w-[86%] w-screen flex gap-[3px] flex-col">
+          <Link className="hidden md:block" href="/">
             <Image
               alt="skrible.io"
               src="/gif/logo_halloween.gif"
-              height={320}
-              width={320}
+              height={isMobileView ? 200 : 320}
+              width={isMobileView ? 200 : 320}
               priority
               unoptimized
-              style={{ width: "auto", height: "auto" }}
+              // style={{ width: "auto", height: "auto" }}
             />
           </Link>
-          <div className="flex justify-between items-center bg-white text-black p-[3px]">
-            <div className="flex gap-1 items-center">
+          <div className="flex justify-between items-center bg-white text-black md:p-[3px] h-11">
+            <div className="flex md:flex-row h-full flex-col gap-1 items-center justify-start">
               <div className="relative">
                 <Image
                   src="/gif/clock.gif"
                   alt="clock image"
                   unoptimized
-                  height={50}
-                  width={50}
-                  className="scale-[1.2]"
+                  height={isMobileView ? 27 : 50}
+                  width={isMobileView ? 27 : 50}
                 />
-                <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[42%] text-xl font-medium">
+                <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[42%] text-xs md:font-medium">
                   {word && !showRoundScore ? (
-                    <Timer onTimeUp={handleTimeUp} startTime={5} />
+                    <Timer onTimeUp={handleTimeUp} startTime={80} />
                   ) : (
                     0
                   )}
                 </p>
               </div>
-              <p>
-                ROUND {currentRound} OF {totalRounds}
+              <p className="text-[9px] md:text-base font-medium">
+                Round {currentRound} of {totalRounds}
               </p>
             </div>
             <div>
               {word && word.length > 0 ? (
-                !playerTurn ? (
-                  <div className="flex items-center flex-col">
-                    <p className="font-medium">Guess Word</p>
-                    <RevealString word={word} hint={hints} />
+                playerTurn ? (
+                  <div className="flex items-center md:text-base text-sm flex-col">
+                    <p className="font-medium">Guess This</p>
+                    <div className="flex gap-2">
+                      <RevealString word={word} hint={hints} />
+                    </div>
                   </div>
                 ) : (
                   word
                 )
               ) : (
-                <p className="font-semibold">Waiting</p>
+                <p className="font-semibold md:text-base text-xs">Waiting</p>
               )}
             </div>
             <div className="cursor-pointer">
@@ -346,22 +365,36 @@ export default function PrivateRoomLayout({
                 <Image
                   src="/gif/settings.gif"
                   alt="settings image"
-                  height={50}
-                  width={50}
+                  height={isMobileView ? 30 : 40}
+                  width={isMobileView ? 30 : 40}
                   unoptimized
                 />
               </Tippy>
             </div>
           </div>
-          <div className="flex gap-2 justify-between w-full">
-            <div className="w-[17%]">
-              <PlayerBoard players={players} socketId={socket.id} />
+          {isMobileView ? (
+            <div className="flex flex-col gap-[3px] justify-between w-full  md:px-6">
+              <div className="w-full">{children}</div>
+              <div className="flex gap-[3px]">
+                <div className="w-[45%]">
+                  <PlayerBoard players={players} socketId={socket.id} />
+                </div>
+                <div className="flex-1">
+                  <Chat message={messages} socket={socket} />
+                </div>
+              </div>
             </div>
-            <div className="w-[63%]">{children}</div>
-            <div className="w-[20%]">
-              <Chat message={messages} socket={socket} />
+          ) : (
+            <div className="flex gap-2 justify-between w-full">
+              <div className="w-[17%]">
+                <PlayerBoard players={players} socketId={socket.id} />
+              </div>
+              <div className="w-[63%]">{children}</div>
+              <div className="w-[20%]">
+                <Chat message={messages} socket={socket} />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
       {showRoundScore && <Score players={players} />}
@@ -409,7 +442,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
           return (
             <div
               key={index}
-              className="pl-2 my-1 gap-3 text-sm text-black bg-white rounded-md border border-black flex justify-between items-center h-[68px]"
+              className="md:pl-2 md:my-1 gap-2 md:gap-3 text-xs md:text-sm text-black bg-white md:rounded-md border border-black flex justify-between items-center h-[49px] md:h-[68px]"
             >
               <div>
                 <p className="font-bold">#{index + 1}</p>
@@ -425,7 +458,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
                   </p>
                 )}
               </div>
-              <div className="flex justify-center flex-col">
+              <div className="flex justify-center flex-col md:text-base text-xs">
                 <div className="flex">
                   {player.name}
                   <p className="ml-1">{isCurrentPlayer && "(You)"}</p>
@@ -440,6 +473,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
                     alt="bursh"
                     src="/gif/how.gif"
                     unoptimized
+                    className="w-[28px] h-[28px] md:w-[40px] md:h-[40px]"
                   />
                 </div>
               )}
@@ -447,7 +481,7 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
                 onClick={
                   isCurrentPlayer ? () => setInviteModal(true) : undefined
                 }
-                className={`w-[120px] h-[120px] overflow-hidden mx-auto relative scale-[.6] items-center ${
+                className={`w-[120px] h-[120px] overflow-hidden mx-auto relative md:scale-[.6]  scale-[.4] items-center ${
                   isCurrentPlayer
                     ? "cursor-pointer hover:scale-[.7] transition-all duration-500 ease-out"
                     : ""
@@ -558,17 +592,17 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
   }, [message]);
 
   return (
-    <div className="text-sm text-black bg-white gap-12 h-[75vh] flex flex-col justify-end rounded-md">
+    <div className="md:text-sm text-xs text-black bg-white md:gap-12 md:h-[75vh] flex flex-col justify-end md:rounded-md">
       <div className="h-72 overflow-y-scroll flex flex-col gap-2 mb-4">
-        <div className="align-text-bottom font-medium capitalize flex gap-1 flex-col">
+        <div className="align-text-bottom font-medium capitalize flex gap-[3px] flex-col">
           {message &&
             message.map((msg, index) => (
               <p
                 key={index}
                 className={
                   index % 2 === 0
-                    ? "bg-black bg-opacity-60 p-1"
-                    : "bg-white p-1"
+                    ? "bg-black bg-opacity-60  md:p-1 p-[3px]"
+                    : "bg-white p-[3px] md:p-1"
                 }
               >
                 <span style={{ color: msg.color }}>{msg.text}</span>
@@ -577,7 +611,7 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
           <div ref={messageEndRef} />
         </div>
       </div>
-      <div className="flex items-center gap-2 p-2">
+      <div className="flex items-center gap-2 md:p-2">
         <input
           type="text"
           name="chat-box"
@@ -588,9 +622,9 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
           onKeyDown={handleSendRequest}
           onChange={onChange}
         />
-        <span className="text-lg p-2 md:hidden block cursor-pointer">
+        {/* <span className="text-lg p-2 md:hidden block cursor-pointer">
           <FaPaperPlane />
-        </span>
+        </span> */}
       </div>
     </div>
   );

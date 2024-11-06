@@ -121,7 +121,7 @@ const Character = () => {
   return (
     <div className="relative flex items-center justify-center bg-blue-800 p-2">
       {/* Left Arrow Buttons */}
-      <div className="absolute left-[20%] bottom-0 flex flex-col space-y-2">
+      <div className="absolute  left-[12%] bottom-3 md:left-[22%]  flex flex-col space-y-2">
         {["eye", "mouth", "face"].map((type) => (
           <div
             key={type}
@@ -197,7 +197,7 @@ const Character = () => {
       </div>
 
       {/* Right Arrow Buttons */}
-      <div className="absolute right-[20%] bottom-0 flex flex-col space-y-2 rotate-180">
+      <div className="absolute right-[12%] bottom-3 md:right-[22%]  flex flex-col space-y-2 rotate-180">
         {["face", "mouth", "eye"].map((type) => (
           <div
             key={type}

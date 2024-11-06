@@ -66,7 +66,7 @@ export default function Page() {
       {!play ? <GameSetting /> : <PlayerDrawingBoard />}
       {play && !showRoundScore && isPlayerChoosingWord && (
         <div
-          className="flex justify-center items-center absolute w-full h-[565px] inset-0"
+          className="flex justify-center items-center absolute w-full md:h-[565px] h-screen inset-0"
           style={{
             pointerEvents: isPlayerChoosingWord ? "auto" : "none",
           }}
@@ -74,22 +74,22 @@ export default function Page() {
           <div className="absolute bg-black opacity-85 inset-0 z-20"></div>
           <div className="z-[21]">
             <div>
-              <div className="text-6xl absolute top-20 left-1/2 -translate-x-1/2">
+              <div className="md:text-6xl text-3xl absolute top-20 left-1/2 -translate-x-1/2">
                 <Timer startTime={10} onTimeUp={handleTimeUp} />
               </div>
-              <h1 className="text-4xl">
+              <h1 className="md:text-4xl text-xl">
                 {isplayerturn
                   ? "Choose"
                   : players[index]?.name + " is choosing"}{" "}
                 a word!
               </h1>
-              <div className="flex gap-10 mt-7">
+              <div className="flex md:gap-10 gap-7 mt-7">
                 {isplayerturn &&
                   wordsList.map((word: string, index) => (
                     <button
                       key={index}
                       onClick={() => handleClick(word)}
-                      className="p-2 bg-white text-black rounded-custom"
+                      className="p-2 bg-white text-black rounded-custom md:text-base text-sm"
                     >
                       {word}
                     </button>
