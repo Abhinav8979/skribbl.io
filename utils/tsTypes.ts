@@ -70,3 +70,7 @@ export interface Setting {
   options: SettingOption[];
   currentValue: SettingOption;
 }
+
+export interface ScoreProps {
+  players: Player[];
+}

@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { FaPaperPlane } from "react-icons/fa";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { Socket } from "socket.io-client";
 import { getSocket } from "../app/socket";
@@ -37,7 +36,13 @@ import { calculateScores, levenshteinDistance } from "../utils/gameFunctions";
 import Score from "../components/Score";
 import { updatePlayerScore } from "../redux/features/game/game";
 import GameOver from "../components/GameOver";
-import { Message, MessageProps, Player, PlayerBoardProps, PlayerInfo } from "../utils/tsTypes";
+import {
+  MessageProps,
+  Player,
+  PlayerBoardProps,
+  PlayerInfo,
+  Message,
+} from "../utils/tsTypes";
 
 export default function PrivateRoomLayout({
   children,
@@ -69,7 +74,7 @@ export default function PrivateRoomLayout({
 
   const isGameover = useAppSelector((state) => state.other.gameOver);
 
-  const socket = getSocket();
+  const socket: Socket = getSocket();
 
   const { roomid } = useParams();
 
@@ -215,7 +220,7 @@ export default function PrivateRoomLayout({
 
   // should be called at the starting of the page load and when any new player joins it
   useEffect(() => {
-    const isOwner = socket.id === players[0]?.socketId;
+    const isOwner = socket.id === (players[0] as Player)?.socketId;
     dispatch(setRoomOwner(isOwner));
   }, [players]);
 
@@ -264,7 +269,7 @@ export default function PrivateRoomLayout({
   useEffect(() => {
     if (currentPlayerIndex < players.length) {
       const isCurrentPlayerChoosingWord =
-        players[currentPlayerIndex]?.socketId === socket.id;
+        (players[currentPlayerIndex] as Player)?.socketId === socket.id;
 
       dispatch(setIsPlayerTURN(isCurrentPlayerChoosingWord));
       dispatch(setIsPlayerChoosingWord(true));

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Player, SetGameMessageAction, State } from "../../../utils/tsTypes";
+import { Player, State } from "../../../utils/tsTypes";
 
 const initialState = {
   messages: [],
@@ -23,7 +23,7 @@ const gameInformationSlice = createSlice({
       state.roomId = action.payload;
     },
 
-    SET_GAME_MESSAGE: (state: State, action: SetGameMessageAction) => {
+    SET_GAME_MESSAGE: (state: State, action) => {
       state.messages = [...action.payload];
     },
     SET_GAME_PLAYERS: (state, action) => {
@@ -48,9 +48,11 @@ const gameInformationSlice = createSlice({
       action: PayloadAction<{ playerSocketId: string; score: number }>
     ) {
       const { playerSocketId, score } = action.payload;
-      const player = state.players.find((p) => p.socketId === playerSocketId);
+      const player = state.players.find(
+        (p) => (p as Player).socketId === playerSocketId
+      );
       if (player) {
-        player.score = Math.ceil(player.score + score);
+        (player as Player).score = Math.ceil((player as Player).score + score);
       }
     },
   },

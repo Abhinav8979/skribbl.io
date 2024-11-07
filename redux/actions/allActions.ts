@@ -22,8 +22,7 @@ import {
   SET_TOTAL_PLAYER_GUESS,
   SET_WORD,
 } from "../features/game/game";
-import { Avatar, Player, PlayerSetting } from "../../utils/tsTypes";
-import { Message } from "postcss";
+import { Avatar, Player, Message, PlayerSetting } from "../../utils/tsTypes";
 
 export const setRoomId = (state: number) => (dispatch: AppDispatch) => {
   dispatch(SET_ROOM_ID(state));

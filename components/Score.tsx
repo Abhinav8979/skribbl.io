@@ -4,8 +4,9 @@ import { showScore } from "../redux/actions/allActions";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { getSocket } from "../app/socket";
 import { useParams } from "next/navigation";
+import { ScoreProps } from "../utils/tsTypes";
 
-const Score = ({ players }) => {
+const Score: React.FC<ScoreProps> = ({ players }) => {
   const dispatch = useAppDispatch();
   const totalRounds = useAppSelector((state) => state.gameSetting.rounds);
   const socket = getSocket();
