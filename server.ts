@@ -15,12 +15,14 @@ let player: Map<
     name: string;
     socketId: string;
     avatar: [string, string, string];
+    totalScore?: number;
   }[]
 > = new Map();
 
 interface Message {
   text: string;
   color: string;
+  senderName?: string;
 }
 
 let roomMessages: Record<string, Message[]> = {};
@@ -75,14 +77,21 @@ app.prepare().then(() => {
       });
     });
 
-    socket.on("player:message-send", ({ playerMessage, roomid }) => {
-      if (roomMessages[roomid]) {
-        const newMessage = { text: playerMessage, color: "#191919" };
-        roomMessages[roomid].push(newMessage);
+    socket.on(
+      "player:message-send",
+      ({ playerMessage, roomid, senderName }) => {
+        if (roomMessages[roomid]) {
+          const newMessage = {
+            text: playerMessage,
+            color: "#191919",
+            senderName,
+          };
+          roomMessages[roomid].push(newMessage);
 
-        io.to(roomid).emit("playerMessage:broadcast", newMessage);
+          io.to(roomid).emit("playerMessage:broadcast", newMessage);
+        }
       }
-    });
+    );
 
     socket.on(
       "player:guessed-word",
@@ -95,6 +104,18 @@ app.prepare().then(() => {
           roomMessages[roomid].push(newMessage);
           const currentCount = playerName.get(roomid) || 0;
           playerName.set(roomid, currentCount + 1);
+
+          const playersInRoom = player.get(roomid);
+          if (playersInRoom) {
+            const playerToUpdate = playersInRoom.find(
+              (p) => p.socketId === playerSocketId
+            );
+            if (playerToUpdate) {
+              playerToUpdate.totalScore =
+                (playerToUpdate.totalScore || 0) + score;
+            }
+          }
+
           io.to(roomid).emit("game:totalPlayerGuesseed", {
             currentCount: currentCount + 1,
             playerSocketId,
@@ -134,6 +155,24 @@ app.prepare().then(() => {
 
     socket.on("start:game", (roomid) => {
       io.to(roomid).emit("start", true);
+    });
+
+    socket.on("game:over", (roomid ) => {
+      const playersInRoom = player.get(roomid);
+
+      if (playersInRoom) {
+        const sortedPlayers = playersInRoom
+          .slice()
+          .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0))
+          .map(({ name, totalScore }) => ({
+            name,
+            totalScore: totalScore || 0,
+          }));
+
+        io.to(roomid).emit("game:over", sortedPlayers);
+      } else {
+        io.to(roomid).emit("game:over", []);
+      }
     });
 
     socket.on("disconnect", () => {

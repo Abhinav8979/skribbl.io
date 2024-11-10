@@ -99,7 +99,3 @@ export const setTotalPlayerGuessed =
   (payload: number) => (dispatch: AppDispatch) => {
     dispatch(SET_TOTAL_PLAYER_GUESS(payload));
   };
-
-export const gameOver = (payload: boolean) => (dispatch: AppDispatch) => {
-  dispatch(SET_GAME_OVER(payload));
-};

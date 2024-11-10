@@ -43,17 +43,20 @@ const gameInformationSlice = createSlice({
     SET_TOTAL_PLAYER_GUESS: (state, action) => {
       state.NumberOfPlayerGuessed = action.payload;
     },
-    updatePlayerScore(
-      state,
-      action: PayloadAction<{ playerSocketId: string; score: number }>
-    ) {
+    updatePlayerScore(state, action) {
       const { playerSocketId, score } = action.payload;
       const player = state.players.find(
         (p) => (p as Player).socketId === playerSocketId
       );
+
       if (player) {
-        (player as Player).score = Math.ceil((player as Player).score + score);
+        (player as Player).score = Math.ceil(score);
       }
+    },
+    resetPlayerScore(state) {
+      state.players.forEach((player) => {
+        (player as Player).score = 0;
+      });
     },
   },
 });
@@ -67,6 +70,7 @@ export const {
   SET_NEXT_ROUND,
   SET_TOTAL_PLAYER_GUESS,
   updatePlayerScore,
+  resetPlayerScore,
 } = gameInformationSlice.actions;
 
 export default gameInformationSlice.reducer;

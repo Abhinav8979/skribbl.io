@@ -138,7 +138,7 @@ const DrawingBoard: React.FC = () => {
     <div className="flex flex-col w-full relative">
       <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
         <Stage
-          width={810}
+          width={560}
           height={isMobileView ? 270 : 560}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}

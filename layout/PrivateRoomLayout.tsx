@@ -9,7 +9,6 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { Socket } from "socket.io-client";
 import { getSocket } from "../app/socket";
 import {
-  gameOver,
   setAvatar,
   setGameMessage,
   setGameOver,
@@ -42,6 +41,7 @@ import {
   PlayerBoardProps,
   PlayerInfo,
   Message,
+  FinalScore,
 } from "../utils/tsTypes";
 
 export default function PrivateRoomLayout({
@@ -51,6 +51,7 @@ export default function PrivateRoomLayout({
 }>) {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [playerName, setPlayerName] = useState<string | null>(null);
+  const [sortedPlayerList, setSortedPlayerList] = useState<FinalScore[]>([]);
 
   const messages = useAppSelector((state) => state.game?.messages);
   const players = useAppSelector((state) => state.game?.players);
@@ -166,6 +167,10 @@ export default function PrivateRoomLayout({
     dispatch(showScore(true));
   };
 
+  const onGameOver = (sortedlist: FinalScore[]) => {
+    setSortedPlayerList(sortedlist);
+  };
+
   // this use effect should be called whenever player guess the word correctly
   useEffect(() => {
     if (players.length >= 2 && NumberOfPlayerGuessed >= players.length - 1) {
@@ -178,12 +183,12 @@ export default function PrivateRoomLayout({
         if (index + 1 >= players.length) {
           dispatch((dispatch, getState) => {
             const currentRound = getState().game.currentRound;
-            if (currentRound !== totalRounds) {
+            if (currentRound !== 2) {
               dispatch(setNextRound(currentRound + 1));
             } else {
-              dispatch(gameOver(true));
+              socket.emit("game:over", roomid);
+              dispatch(setGameOver(true));
               dispatch(setPlay(false));
-              alert("game over");
             }
             dispatch(setPlayerIndex(0));
           });
@@ -251,6 +256,7 @@ export default function PrivateRoomLayout({
       socket.on("game:word", onGameWord);
       // socket.on("game:nextPlayerIndex", onNextPlayerIndex);
       socket.on("game:totalPlayerGuesseed", onTotalPlayerGuesseed);
+      socket.on("game:over", onGameOver);
 
       return () => {
         socket.off("connect", onConnect);
@@ -261,6 +267,7 @@ export default function PrivateRoomLayout({
         socket.off("start", onGameStart);
         socket.off("game:word", onGameWord);
         socket.off("game:totalPlayerGuesseed", onTotalPlayerGuesseed);
+        socket.off("game:over", onGameOver);
       };
     }
   }, [socket, playerName, roomid, router]);
@@ -340,7 +347,7 @@ export default function PrivateRoomLayout({
             </div>
             <div>
               {word && word.length > 0 ? (
-                playerTurn ? (
+                !playerTurn ? (
                   <div className="flex items-center md:text-base text-sm flex-col">
                     <p className="font-medium">Guess This</p>
                     <div className="flex gap-2">
@@ -397,7 +404,7 @@ export default function PrivateRoomLayout({
         </div>
       </section>
       {showRoundScore && <Score players={players} />}
-      {isGameover && !play && <GameOver />}
+      {isGameover && !play && <GameOver sortedPlayerList={sortedPlayerList} />}
     </>
   );
 }
@@ -458,7 +465,9 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
                   {player.name}
                   <p className="ml-1">{isCurrentPlayer && "(You)"}</p>
                 </div>
-                <p className="whitespace-nowrap">{player.score} points</p>
+                <p className="whitespace-nowrap">
+                  {player.score ? player.score : 0} points
+                </p>
               </div>
               {isDrawing && (
                 <div>
@@ -559,10 +568,17 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
             );
           });
         } else {
-          socket?.emit("player:message-send", { playerMessage, roomid });
+          socket?.emit("player:message-send", {
+            playerMessage,
+            roomid,
+          });
         }
       } else {
-        socket?.emit("player:message-send", { playerMessage, roomid });
+        socket?.emit("player:message-send", {
+          playerMessage,
+          roomid,
+          senderName: sessionStorage?.getItem("playerName"),
+        });
       }
       setPlayerMessage("");
     }
@@ -590,6 +606,11 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
                     : "bg-white p-[3px] md:p-1"
                 }
               >
+                {msg.senderName && (
+                  <span className="font-medium text-black">
+                    {msg.senderName} :
+                  </span>
+                )}
                 <span style={{ color: msg.color }}>{msg.text}</span>
               </p>
             ))}
@@ -607,9 +628,6 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
           onKeyDown={handleSendRequest}
           onChange={onChange}
         />
-        {/* <span className="text-lg p-2 md:hidden block cursor-pointer">
-          <FaPaperPlane />
-        </span> */}
       </div>
     </div>
   );

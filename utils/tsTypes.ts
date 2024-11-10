@@ -15,6 +15,7 @@ export interface PlayerSetting {
 export interface Message {
   text: string;
   color: string;
+  senderName?: string;
 }
 
 // Interface for an avatar with face, eye, and mouth options
@@ -73,4 +74,9 @@ export interface Setting {
 
 export interface ScoreProps {
   players: Player[];
+}
+
+export interface FinalScore {
+  name: string;
+  totalScore: number;
 }

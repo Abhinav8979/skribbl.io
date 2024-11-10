@@ -9,11 +9,11 @@ import { generateRandomWords } from "../../../utils/utils";
 import {
   setIsPlayerChoosingWord,
   setWord,
-  showScore,
 } from "../../../redux/actions/allActions";
 import { getSocket } from "../../socket";
 import { useParams } from "next/navigation";
 import { Player } from "../../../utils/tsTypes";
+import GenerateAvatar from "../../../utils/GenerateAvatar";
 
 export default function Page() {
   const play = useAppSelector((state) => state.other.Play);
@@ -33,17 +33,9 @@ export default function Page() {
 
   const dispatch = useAppDispatch();
 
-  // useEffect(() => {
-  //   dispatch(setIsPlayerChoosingWord(false));
-  // }, []);
-
   useEffect(() => {
     SetWordsList(generateRandomWords());
   }, [index]);
-
-  // useEffect(() => {
-  //   console.log("Updated wordsList:", wordsList);
-  // }, [wordsList]);
 
   const handleTimeUp = () => {
     const randomWord = wordsList[Math.floor(Math.random() * wordsList.length)];
@@ -91,6 +83,13 @@ export default function Page() {
                       {word}
                     </button>
                   ))}
+              </div>
+              <div>
+                {/* <GenerateAvatar
+                  eye={players[index]?.avatar?.[0]}
+                  mouth={players[index]?.avatar?.[1]}
+                  face={players[index]?.avatar?.[2]}
+                /> */}
               </div>
             </div>
           </div>

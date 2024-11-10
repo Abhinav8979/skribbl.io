@@ -1,23 +1,14 @@
-"use client";
+import React from "react";
+import { FinalScore } from "../utils/tsTypes";
 
-import React, { useEffect, useState } from "react";
-import { useAppSelector } from "../redux/hooks";
-import { Player } from "../utils/tsTypes";
-
-const GameOver = () => {
-  const players: Player[] = useAppSelector((state) => state.game.players);
-
-  const [playerRank, setPlayerRank] = useState<Player[]>([]);
-
-  useEffect(() => {
-    const sortedPlayerList = players.sort((a, b) => b.score - a.score);
-    setPlayerRank(sortedPlayerList);
-  }, []);
-
+const GameOver = ({ sortedPlayerList }: { sortedPlayerList: FinalScore[] }) => {
   return (
     <div className="absolute inset-0 bg-white bg-opacity-50 backdrop-blur-md flex items-center justify-center">
+      <h1 className="md:text-7xl text-4xl  font-bold text-center text-gray-700">
+        Game Over
+      </h1>
       <div className="w-[300px] flex flex-col gap-3 p-5 rounded-lg bg-white/60 backdrop-blur-lg shadow-lg">
-        {playerRank.map((player, index) => {
+        {sortedPlayerList.map((player, index) => {
           return (
             <div
               key={index}
@@ -26,7 +17,7 @@ const GameOver = () => {
               <span>
                 {index + 1}. {player.name}
               </span>
-              <span>{player.score}</span>
+              <span>{player.totalScore}</span>
             </div>
           );
         })}

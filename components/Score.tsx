@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { getSocket } from "../app/socket";
 import { useParams } from "next/navigation";
 import { ScoreProps } from "../utils/tsTypes";
+import { resetPlayerScore } from "../redux/features/game/game";
 
 const Score: React.FC<ScoreProps> = ({ players }) => {
   const dispatch = useAppDispatch();
@@ -14,6 +15,7 @@ const Score: React.FC<ScoreProps> = ({ players }) => {
 
   const handleTimeUp = () => {
     dispatch(showScore(false));
+    dispatch(resetPlayerScore());
     socket.emit("game:next-round", roomid);
   };
 
@@ -35,7 +37,9 @@ const Score: React.FC<ScoreProps> = ({ players }) => {
                 className="flex items-center justify-between bg-white bg-opacity-40 backdrop-blur-md text-lg text-gray-800 font-medium p-4 rounded-md shadow-md border border-white/30 transition-all duration-300 hover:shadow-xl hover:bg-white/50"
               >
                 <p className="font-semibold">{player.name}</p>
-                <p className="text-indigo-600 font-bold">{player.score || 0}</p>
+                <p className="text-indigo-600 font-bold">
+                  {player.score ? player.score : 0}
+                </p>
               </div>
             ))}
         </div>
