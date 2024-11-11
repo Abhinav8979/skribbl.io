@@ -9,6 +9,8 @@ import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setLoading, setPlay } from "../../redux/actions/allActions";
 import Character from "./CharacterEdit";
+import { getSocket } from "../../app/socket";
+import { Socket } from "socket.io-client";
 
 const Home = () => {
   const [name, setName] = useState<string>("");
@@ -19,6 +21,7 @@ const Home = () => {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector((state) => state.other.isLoading);
   const avatar = useAppSelector((state) => state.game.avatar);
+  const socket: Socket = getSocket();
 
   const handleSave = useCallback(() => {
     sessionStorage.setItem("playerName", name);
@@ -55,8 +58,8 @@ const Home = () => {
       if (inviteRoomid) {
         router.push(`/private-room/${inviteRoomid}?playerName=${name}`);
       } else {
+        socket.emit("game:random-join", { name, avatar });
         router.push(`/play`);
-        // Logic for joining a random game can be added here
       }
     } else {
       alert("Please enter a name");
@@ -76,6 +79,12 @@ const Home = () => {
   useEffect(() => {
     dispatch(setLoading(false));
   }, [dispatch]);
+
+  useEffect(() => {
+    socket.on("game:random-join", (randomRoomId) => {
+      router.push(`/private-room/${randomRoomId}?playerName=${name}`);
+    });
+  }, []);
 
   return (
     <>

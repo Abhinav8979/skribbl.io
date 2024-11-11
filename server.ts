@@ -157,7 +157,7 @@ app.prepare().then(() => {
       io.to(roomid).emit("start", true);
     });
 
-    socket.on("game:over", (roomid ) => {
+    socket.on("game:over", (roomid) => {
       const playersInRoom = player.get(roomid);
 
       if (playersInRoom) {
@@ -174,6 +174,22 @@ app.prepare().then(() => {
         io.to(roomid).emit("game:over", []);
       }
     });
+
+    socket.on(
+      "game:random-join",
+      ({
+        name,
+        avatar,
+      }: {
+        name: string;
+        avatar: [string, string, string];
+      }) => {
+        const randomRoomId =
+          availableRoom[Math.floor(Math.random() * availableRoom.length)];
+
+        socket.emit("game:random-join", randomRoomId);
+      }
+    );
 
     socket.on("disconnect", () => {
       let roomid;
