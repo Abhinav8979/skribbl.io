@@ -519,7 +519,7 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
   const word = useAppSelector((state) => state.game.word);
   const dispatch = useAppDispatch();
 
-  const players = useAppSelector((state) => state.game.players);
+  const IsPlayerTurn = useAppSelector((state) => state.other.isPlayerTurn);
   const gameTime = useAppSelector((state) => state.gameSetting.Drawtime);
   const NumberOfPlayerGuessed = useAppSelector(
     (state) => state.game.NumberOfPlayerGuessed
@@ -538,7 +538,12 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
 
   const handleSendRequest = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && playerMessage.trim()) {
-      if (word && play && word.length === playerMessage.length) {
+      if (
+        word &&
+        play &&
+        word.length === playerMessage.length &&
+        !IsPlayerTurn
+      ) {
         const distance = levenshteinDistance({ a: word, b: playerMessage });
 
         if (distance === 0) {
