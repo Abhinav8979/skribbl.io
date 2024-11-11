@@ -7,11 +7,11 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Socket } from "socket.io-client";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setGameSetting } from "../redux/actions/allActions";
+import { setGameMessage, setGameSetting } from "../redux/actions/allActions";
 import { getSocket } from "../app/socket";
-import { PlayerSetting, Setting } from "../utils/tsTypes";
+import { Player, PlayerSetting, Setting } from "../utils/tsTypes";
 
-const GameSetting = () => {
+const GameSetting = ({ players }: { players: Player[] }) => {
   const { roomid } = useParams();
 
   const isOwner = useAppSelector((state) => state?.other?.roomOwner);
@@ -83,7 +83,18 @@ const GameSetting = () => {
   const socket: Socket = getSocket();
 
   const handleGameStart = () => {
-    socket.emit("start:game", roomid);
+    if (players.length >= 2) {
+      socket.emit("start:game", roomid);
+    } else {
+      const newMessages = {
+        text: "Atleast 2 players are needed to  start the  game!",
+        color: "red",
+      };
+      dispatch((dispatch, getState) => {
+        const currentMessages = getState().game.messages;
+        dispatch(setGameMessage([...currentMessages, newMessages]));
+      });
+    }
   };
 
   const CopyToClipboard = () => {

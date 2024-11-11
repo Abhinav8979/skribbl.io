@@ -52,7 +52,7 @@ export default function Page() {
 
   return (
     <section className="relative">
-      {!play ? <GameSetting /> : <PlayerDrawingBoard />}
+      {!play ? <GameSetting players={players} /> : <PlayerDrawingBoard />}
       {play && !showRoundScore && isPlayerChoosingWord && (
         <div
           className="flex justify-center items-center absolute w-full md:h-[565px] h-screen inset-0"

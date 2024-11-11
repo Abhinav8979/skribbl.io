@@ -183,7 +183,7 @@ export default function PrivateRoomLayout({
         if (index + 1 >= players.length) {
           dispatch((dispatch, getState) => {
             const currentRound = getState().game.currentRound;
-            if (currentRound !== 2) {
+            if (currentRound !== totalRounds) {
               dispatch(setNextRound(currentRound + 1));
             } else {
               socket.emit("game:over", roomid);
