@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import StoreProvider from "../AppProvider";
 import "./globals.css";
 import dynamic from "next/dynamic";
 
