@@ -28,7 +28,6 @@ import Tippy from "@tippyjs/react";
 import "tippy.js/animations/scale-subtle.css";
 import "tippy.js/dist/tippy.css";
 import GenerateAvatar from "../utils/GenerateAvatar";
-import InviteModal from "../utils/InviteModal";
 import Timer from "../utils/Timer";
 import RevealString from "../utils/RevealText";
 import { calculateScores, levenshteinDistance } from "../utils/gameFunctions";
@@ -63,6 +62,7 @@ export default function PrivateRoomLayout({
   const totalRounds = useAppSelector((state) => state.gameSetting.rounds);
   const hints = useAppSelector((state) => state.gameSetting.hints);
   const currentPlayerIndex = useAppSelector((state) => state.other.playerIndex);
+  const totalTime = useAppSelector((state) => state.gameSetting.Drawtime);
 
   const playerTurn = useAppSelector((state) => state.other.isPlayerTurn);
   const totalPlayers = useAppSelector((state) => state.gameSetting.Players);
@@ -80,7 +80,6 @@ export default function PrivateRoomLayout({
   const { roomid } = useParams();
 
   const searchParams = useSearchParams();
-  const inviteRoomid = searchParams.get("");
 
   const dispatch = useAppDispatch();
 
@@ -114,11 +113,8 @@ export default function PrivateRoomLayout({
     playerList: Player[];
     messages: Message[];
   }) => {
-    // setPlayers(playerList);
     dispatch(setGamePlayers(playerList));
     dispatch(setGameMessage(messages));
-
-    // setMessages((prev) => [...prev, ...messages]);
   };
 
   const onMessageBroadcast = (newMessages: Message) => {
@@ -131,8 +127,6 @@ export default function PrivateRoomLayout({
   const onGameWord = (word: string) => {
     dispatch(setWord(word));
     dispatch(setIsPlayerChoosingWord(false));
-    // dispatch(setIsPlayerTURN(true));
-    // dispatch(showScore(false));
   };
 
   const onTotalPlayerGuesseed = ({
@@ -227,18 +221,13 @@ export default function PrivateRoomLayout({
   useEffect(() => {
     const isOwner = socket.id === (players[0] as Player)?.socketId;
     dispatch(setRoomOwner(isOwner));
-  }, [players]);
+  }, [players, socket]);
 
   // should be called at the starting of the page load
   useEffect(() => {
-    // if (!playerName) {
-    //   let pageUrl = window.location.origin;
-    //   if (inviteRoomid) {
-    //     pageUrl += "/?" + inviteRoomid;
-    //   }
-    //   router.push(pageUrl);
-    //   return;
-    // }
+    if (isMobileView === null && typeof window !== "undefined") {
+      setIsMobileView(window.innerWidth <= 768);
+    }
 
     if (socket) {
       if (socket.connected) {
@@ -254,7 +243,6 @@ export default function PrivateRoomLayout({
       socket.on("copy:clipboard", onMessageBroadcast);
       socket.on("start", onGameStart);
       socket.on("game:word", onGameWord);
-      // socket.on("game:nextPlayerIndex", onNextPlayerIndex);
       socket.on("game:totalPlayerGuesseed", onTotalPlayerGuesseed);
       socket.on("game:over", onGameOver);
 
@@ -283,21 +271,19 @@ export default function PrivateRoomLayout({
     }
   }, [currentPlayerIndex, players]);
 
-  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
+  const [isMobileView, setIsMobileView] = useState(false);
 
-  // Effect to update state on window resize
   useEffect(() => {
     const handleResize = () => {
-      setIsMobileView(window.innerWidth <= 768);
+      if (typeof window !== "undefined") {
+        setIsMobileView(window.innerWidth <= 768);
+      }
     };
 
-    // Add event listener on component mount
     window.addEventListener("resize", handleResize);
 
-    // Call handler right away so state gets updated with initial width
     handleResize();
 
-    // Clean up event listener on component unmount
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
@@ -335,7 +321,7 @@ export default function PrivateRoomLayout({
                 />
                 <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[42%] text-xs md:font-medium">
                   {word && !showRoundScore ? (
-                    <Timer onTimeUp={handleTimeUp} startTime={80} />
+                    <Timer onTimeUp={handleTimeUp} startTime={totalTime} />
                   ) : (
                     0
                   )}
@@ -351,7 +337,7 @@ export default function PrivateRoomLayout({
                   <div className="flex items-center md:text-base text-sm flex-col">
                     <p className="font-medium">Guess This</p>
                     <div className="flex gap-2">
-                      <RevealString word={word} hint={hints} />
+                      <RevealString word={word} hint={hints} time={totalTime} />
                     </div>
                   </div>
                 ) : (
@@ -410,41 +396,17 @@ export default function PrivateRoomLayout({
 }
 
 const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
-  const [inviteModal, setInviteModal] = useState<boolean>(false);
-
-  const dispatch = useAppDispatch();
-  const avatar = useAppSelector((state) => state.game.avatar);
-  const playerIndex = useAppSelector((state) => state.other.playerIndex);
-
-  const isPlayerTurn = useAppSelector((state) => state.other.isPlayerTurn);
-  const isOwner = useAppSelector((state) => state.other.roomOwner);
   const isDrawing = useAppSelector((state) => state.other.isDrawing);
 
   return (
     <>
-      {/* {inviteModal && (
-        <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6 md:p-8 z-30">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-gray-200/50 backdrop-blur-lg"></div>
-          <div className="flex flex-col items-center justify-center bg-white bg-opacity-30 backdrop-blur-md border border-white/40 rounded-xl shadow-lg p-6 w-full sm:w-[350px] md:w-[400px] lg:w-[450px]">
-            <InviteModal
-              avatar={avatar}
-              name={
-                players?.find((player) => player.socketId === socketId)?.name
-              }
-              setInviteModal={setInviteModal}
-              key={socketId}
-            />
-          </div>
-        </div>
-      )} */}
       {players && players.length > 0 ? (
         players.map((player, index) => {
           const isCurrentPlayer = player.socketId === socketId;
-
           return (
             <div
               key={index}
-              className="md:pl-2 md:my-1 gap-2 md:gap-3 text-xs md:text-sm text-black bg-white md:rounded-md border border-black flex justify-between items-center h-[49px] md:h-[68px]"
+              className="md:pl-2 md:my-1 gap-2 md:gap-3 text-xs md:text-sm text-black bg-white md:rounded-md border border-black flex justify-between  items-center h-[49px] md:h-[68px]"
             >
               <div>
                 <p className="font-bold">#{index + 1}</p>
@@ -481,22 +443,21 @@ const PlayerBoard: React.FC<PlayerBoardProps> = ({ players, socketId }) => {
                   />
                 </div>
               )}
-              <div
-                onClick={
-                  isCurrentPlayer ? () => setInviteModal(true) : undefined
-                }
-                className={`w-[120px] h-[120px] overflow-hidden mx-auto relative md:scale-[.6]  scale-[.4] items-center ${
-                  isCurrentPlayer
-                    ? "cursor-pointer hover:scale-[.7] transition-all duration-500 ease-out"
-                    : ""
-                }`}
-              >
-                <GenerateAvatar
-                  key={player?.socketId}
-                  eye={player?.avatar?.[0]}
-                  face={player?.avatar?.[2]}
-                  mouth={player?.avatar?.[1]}
-                />
+              <div className="relative -translate-x-1">
+                <div
+                  className={`w-[120px] h-[120px] mx-auto md:scale-[.6] scale-[.4] items-center ${
+                    isCurrentPlayer
+                      ? "cursor-pointer hover:scale-[.65] transition-all duration-500 ease-out"
+                      : ""
+                  }`}
+                >
+                  <GenerateAvatar
+                    key={player?.socketId}
+                    eye={player?.avatar?.[0]}
+                    face={player?.avatar?.[2]}
+                    mouth={player?.avatar?.[1]}
+                  />
+                </div>
               </div>
             </div>
           );
@@ -523,6 +484,10 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
   const gameTime = useAppSelector((state) => state.gameSetting.Drawtime);
   const NumberOfPlayerGuessed = useAppSelector(
     (state) => state.game.NumberOfPlayerGuessed
+  );
+
+  const customWords: string[] = useAppSelector(
+    (state) => state.gameSetting.customWords
   );
 
   const [timeElapsed, setTimeElapsed] = useState<number>(0);
@@ -579,13 +544,42 @@ const Chat: React.FC<MessageProps> = ({ message, socket }) => {
           });
         }
       } else {
-        socket?.emit("player:message-send", {
-          playerMessage,
-          roomid,
-          senderName: sessionStorage?.getItem("playerName"),
-        });
+        if (
+          customWords &&
+          Array.isArray(customWords) &&
+          customWords.length > 0
+        ) {
+          const isMessageValid = customWords.includes(playerMessage);
+          if (isMessageValid) {
+            socket?.emit("player:message-send", {
+              playerMessage,
+              roomid,
+              senderName: sessionStorage?.getItem("playerName"),
+            });
+          } else {
+            dispatch((dispatch, getState) => {
+              const currentMessages = getState().game.messages;
+              dispatch(
+                setGameMessage([
+                  ...currentMessages,
+                  {
+                    text: "use only custom words that are allowed!",
+                    color: "pink",
+                  },
+                ])
+              );
+            });
+            return;
+          }
+        } else {
+          socket?.emit("player:message-send", {
+            playerMessage,
+            roomid,
+            senderName: sessionStorage?.getItem("playerName"),
+          });
+        }
+        setPlayerMessage("");
       }
-      setPlayerMessage("");
     }
   };
 

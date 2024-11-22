@@ -1,11 +1,7 @@
 import React from "react";
-interface avatar {
-  eye: number;
-  mouth: number;
-  face: number;
-}
+import { Avatar } from "./tsTypes";
 
-const GenerateAvatar = ({ eye, mouth, face }: avatar) => {
+const GenerateAvatar = ({ eye, mouth, face }: Avatar) => {
   const facesPerRow = 10,
     faceWidth = 120,
     faceHeight = 120;
@@ -28,7 +24,7 @@ const GenerateAvatar = ({ eye, mouth, face }: avatar) => {
   };
 
   return (
-    <>
+    <main>
       <div
         className="w-full h-full bg-no-repeat absolute"
         style={{
@@ -68,7 +64,7 @@ const GenerateAvatar = ({ eye, mouth, face }: avatar) => {
           ),
         }}
       ></div>
-    </>
+    </main>
   );
 };
 

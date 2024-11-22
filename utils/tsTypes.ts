@@ -9,6 +9,7 @@ export interface PlayerSetting {
   hints: number;
   Language: string;
   gameMode: string;
+  wordArray: string[];
 }
 
 // Interface for messages in the application
@@ -79,4 +80,19 @@ export interface ScoreProps {
 export interface FinalScore {
   name: string;
   totalScore: number;
+}
+
+export interface ArrowColorState {
+  face: {
+    left: boolean;
+    right: boolean;
+  };
+  eye: {
+    left: boolean;
+    right: boolean;
+  };
+  mouth: {
+    left: boolean;
+    right: boolean;
+  };
 }

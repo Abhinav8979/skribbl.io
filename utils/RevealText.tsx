@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from "react";
 
-const RevealString = ({ word, hint }: { word: string; hint: number }) => {
+const RevealString = ({
+  word,
+  hint,
+  time,
+}: {
+  word: string;
+  hint: number;
+  time: number;
+}) => {
   const [displayText, setDisplayText] = useState("_".repeat(word?.length));
   const [revealedCount, setRevealedCount] = useState(0);
 
   useEffect(() => {
     if (revealedCount >= hint) return;
+
+    const revealInterval = (time * 1000) / hint; // Convert time to milliseconds
 
     const revealChar = () => {
       const unrevealedIndexes = [];
@@ -31,20 +41,20 @@ const RevealString = ({ word, hint }: { word: string; hint: number }) => {
       }
     };
 
-    const timer = setTimeout(revealChar, 1000);
+    const timer = setTimeout(revealChar, revealInterval);
 
     return () => clearTimeout(timer);
-  }, [displayText, revealedCount, word, hint]);
+  }, [displayText, revealedCount, word, hint, time]);
 
   return (
-    <>
+    <div style={{ display: "flex", gap: "5px" }}>
       {displayText &&
         displayText.split("").map((char, index) => (
           <p className="font-bold" key={index}>
             {char}
           </p>
         ))}
-    </>
+    </div>
   );
 };
 

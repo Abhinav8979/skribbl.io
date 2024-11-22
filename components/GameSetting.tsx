@@ -1,19 +1,18 @@
-"use client";
-
-import Image from "next/image";
-import { FaUserPlus } from "react-icons/fa";
-import React, { useEffect, useState } from "react";
-
+import React, { useEffect, useState, ChangeEvent } from "react";
 import { useParams } from "next/navigation";
 import { Socket } from "socket.io-client";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setGameMessage, setGameSetting } from "../redux/actions/allActions";
 import { getSocket } from "../app/socket";
 import { Player, PlayerSetting, Setting } from "../utils/tsTypes";
+import Image from "next/image";
+import { FaUserPlus } from "react-icons/fa";
 
 const GameSetting = ({ players }: { players: Player[] }) => {
-  const { roomid } = useParams();
+  const [customWords, setCustomWords] = useState<boolean>(false);
+  const [customWordInput, setCustomWordInput] = useState<string>(""); // New state for input text
 
+  const { roomid } = useParams();
   const isOwner = useAppSelector((state) => state?.other?.roomOwner);
 
   const setting: Setting[] = [
@@ -29,7 +28,10 @@ const GameSetting = ({ players }: { players: Player[] }) => {
     },
     {
       name: "Drawtime",
-      options: Array.from({ length: 10 }, (_, i) => i + 10),
+      options: Array.from(
+        { length: (150 - 80) / 10 + 1 },
+        (_, i) => 80 + i * 10
+      ),
       currentValue: 80,
     },
     {
@@ -64,6 +66,7 @@ const GameSetting = ({ players }: { players: Player[] }) => {
     hints: 2,
     Language: "English",
     gameMode: "normal",
+    wordArray: [],
   });
 
   useEffect(() => {
@@ -80,6 +83,7 @@ const GameSetting = ({ players }: { players: Player[] }) => {
       [name]: value,
     }));
   };
+
   const socket: Socket = getSocket();
 
   const handleGameStart = () => {
@@ -87,7 +91,7 @@ const GameSetting = ({ players }: { players: Player[] }) => {
       socket.emit("start:game", roomid);
     } else {
       const newMessages = {
-        text: "Atleast 2 players are needed to  start the  game!",
+        text: "At least 2 players are needed to start the game!",
         color: "red",
       };
       dispatch((dispatch, getState) => {
@@ -98,10 +102,18 @@ const GameSetting = ({ players }: { players: Player[] }) => {
   };
 
   const CopyToClipboard = () => {
-    const pageUrl = window.location.origin + "/?" + roomid;
-    navigator.clipboard.writeText(pageUrl).then(() => {
-      socket.emit("copy:clipboard", roomid);
-    });
+    if (typeof window !== "undefined") {
+      const pageUrl = window.location.origin + "/?" + roomid;
+      navigator.clipboard.writeText(pageUrl).then(() => {
+        socket.emit("copy:clipboard", roomid);
+      });
+    }
+  };
+
+  const handleTextareaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    if (customWords) {
+      setCustomWordInput(e.target.value);
+    }
   };
 
   return (
@@ -117,7 +129,7 @@ const GameSetting = ({ players }: { players: Player[] }) => {
         {setting.map((ele, index) => (
           <div
             key={index}
-            className="flex  justify-between items-center pb-1 md:w-auto w-1/2 my-[3px] gap-3"
+            className="flex justify-between items-center pb-1 md:w-auto w-1/2 my-[3px] gap-3"
           >
             <div className="flex items-center gap-[3px] md:gap-2">
               <Image
@@ -133,7 +145,7 @@ const GameSetting = ({ players }: { players: Player[] }) => {
               </span>
             </div>
             <select
-              className="bg-white text-black md:w-1/2 w-[40%]  text-xs md:text-lg sm:h-6 md:h-10 sm:p-1" // Apply 6px text size and small height on small screens
+              className="bg-white text-black md:w-1/2 w-[40%]  text-xs md:text-lg sm:h-6 md:h-10 sm:p-1"
               defaultValue={ele.currentValue}
               onChange={(e) => handleChange(e, ele.name)}
             >
@@ -156,13 +168,17 @@ const GameSetting = ({ players }: { players: Player[] }) => {
             name="customWord"
             id="customWord"
             className="md:w-[20px] md:h-[20px] w-[16px] h-[16px]"
+            onChange={() => setCustomWords((prev) => !prev)}
           />
         </div>
       </div>
 
       <textarea
         className="w-full h-24 md:h-36 bg-white text-black text-xs md:text-base p-2 rounded mt-1 mb-1"
-        placeholder="Minimum of 10 words. 1-32 characters per word! 20000 characters maximum. Separated by a comma (,) "
+        placeholder="Minimum of 10 words. 1-32 characters per word! 20000 characters maximum. Separated by a comma (,)"
+        onChange={handleTextareaChange}
+        value={customWordInput}
+        disabled={!customWords}
       />
 
       <div className="flex md:gap-1 gap-[3px] text-xs md:text-lg font-bold px-[3px]">

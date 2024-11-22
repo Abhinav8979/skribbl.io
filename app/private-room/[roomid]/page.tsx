@@ -26,6 +26,7 @@ export default function Page() {
   const index = useAppSelector((state) => state.other.playerIndex);
   const isplayerturn = useAppSelector((state) => state.other.isPlayerTurn);
   const showRoundScore = useAppSelector((state) => state.other.showScore);
+  const wordCount = useAppSelector((state) => state.gameSetting.wordCount);
 
   const [wordsList, SetWordsList] = useState<string[]>([]);
   const socket = getSocket();
@@ -34,7 +35,7 @@ export default function Page() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    SetWordsList(generateRandomWords());
+    SetWordsList(generateRandomWords(wordCount));
   }, [index]);
 
   const handleTimeUp = () => {
@@ -84,13 +85,17 @@ export default function Page() {
                     </button>
                   ))}
               </div>
-              <div>
-                {/* <GenerateAvatar
-                  eye={players[index]?.avatar?.[0]}
-                  mouth={players[index]?.avatar?.[1]}
-                  face={players[index]?.avatar?.[2]}
-                /> */}
-              </div>
+              {isPlayerChoosingWord && (
+                <div
+                  className={`w-[120px] h-[120px] overflow-hidden mx-auto relative md:scale-[.6]  scale-[.4] items-center `}
+                >
+                  <GenerateAvatar
+                    eye={players[index]?.avatar?.[0]}
+                    mouth={players[index]?.avatar?.[1]}
+                    face={players[index]?.avatar?.[2]}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

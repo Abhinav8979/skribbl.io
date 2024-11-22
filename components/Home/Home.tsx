@@ -40,6 +40,7 @@ const Home = () => {
     if (name) {
       const roomid = generateRoomID();
       dispatch(setLoading(true));
+
       sessionStorage.setItem("avatarEye", avatar.eye.toString());
       sessionStorage.setItem("avatarFace", avatar.face.toString());
       sessionStorage.setItem("avatarMouth", avatar.mouth.toString());

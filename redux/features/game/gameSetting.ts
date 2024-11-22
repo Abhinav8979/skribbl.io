@@ -8,6 +8,7 @@ const initialState = {
   hints: 2,
   Language: "english",
   gameMode: "normal",
+  customWords: [],
 };
 
 const gameSettingSlice = createSlice({
@@ -21,6 +22,11 @@ const gameSettingSlice = createSlice({
       state.wordCount = action.payload?.wordCount;
       state.hints = action.payload?.hints;
       state.Language = action.payload?.Language;
+
+      if (action.payload.wordArray.length > 0) {
+        const wordArray = action.payload?.wordArray.split(",");
+        state.customWords = wordArray;
+      }
     },
   },
 });

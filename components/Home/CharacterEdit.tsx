@@ -3,21 +3,7 @@
 import React, { useState } from "react";
 import { useAppDispatch } from "../../redux/hooks";
 import { setAvatar } from "../../redux/actions/allActions";
-
-interface ArrowColorState {
-  face: {
-    left: boolean;
-    right: boolean;
-  };
-  eye: {
-    left: boolean;
-    right: boolean;
-  };
-  mouth: {
-    left: boolean;
-    right: boolean;
-  };
-}
+import { ArrowColorState } from "../../utils/tsTypes";
 
 const Character = () => {
   const [currentFaceIndex, setCurrentFaceIndex] = useState(0);
@@ -30,19 +16,18 @@ const Character = () => {
   });
   const dispatch = useAppDispatch();
 
-  // Constants for face, eye, and mouth grid calculations
   const facesPerRow = 10,
-    totalFaces = 28,
+    totalFaces = 27,
     faceWidth = 120,
     faceHeight = 120;
 
   const eyesPerRow = 10,
-    totalEyes = 61,
+    totalEyes = 57,
     eyeWidth = 100,
     eyeHeight = 101;
 
   const mouthsPerRow = 10,
-    totalMouths = 67,
+    totalMouths = 51,
     mouthWidth = 100,
     mouthHeight = 101;
 
@@ -57,13 +42,11 @@ const Character = () => {
     return { backgroundPosition: `-${col * width}px -${row * height}px` };
   };
 
-  // Arrow Navigation Helpers
   const nextIndex = (currentIndex: number, total: number) =>
     (currentIndex + 1) % total;
   const prevIndex = (currentIndex: number, total: number) =>
     (currentIndex - 1 + total) % total;
 
-  // Arrow Color Control
   const setArrowColor = (
     propName: keyof ArrowColorState,
     arrowDirection: "left" | "right"
@@ -182,7 +165,7 @@ const Character = () => {
           }}
         ></div>
         <div
-          className="w-[100px] h-[80px] bg-no-repeat absolute bottom-[22%] left-[8%]"
+          className="w-[100px] h-[80px] bg-no-repeat absolute bottom-[20%] left-[8%]"
           style={{
             backgroundImage: "url(/gif/mouth_atlas.gif)",
             backgroundSize: `${mouthWidth * mouthsPerRow}px auto`,

@@ -33,7 +33,3 @@ export function levenshteinDistance({ a, b }: { a: string; b: string }) {
   }
   return matrix[b.length][a.length];
 }
-
-// const threshold = 2; // Customize threshold as needed
-// const distance = levenshteinDistance(guess, target);
-// const hint = distance <= threshold ? "You're very close!" : "Keep trying!";
