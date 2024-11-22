@@ -9,7 +9,7 @@ const Custom404 = () => {
         The page you are looking for might have been moved or doesn't exist.
       </p>
       <Link href="/">
-        <a style={{ color: "blue" }}>Go back to Home</a>
+        <p style={{ color: "blue" }}>Go back to Home</p>
       </Link>
     </div>
   );
