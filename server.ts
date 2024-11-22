@@ -3,7 +3,7 @@ import next from "next";
 import { Server, Socket } from "socket.io";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
+const hostname = process.env.HOSTNAME || "localhost";
 const port = 3001;
 
 const app = next({ dev, hostname, port });
